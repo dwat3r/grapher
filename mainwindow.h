@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "graphics.h"
 
 namespace Ui {
   class MainWindow;
@@ -17,6 +18,7 @@ public:
 
 private:
   Ui::MainWindow *ui;
+  graphics *scene;
 };
 
 #endif // MAINWINDOW_H
