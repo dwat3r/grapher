@@ -2,6 +2,7 @@
 #define GRAPHICS_H
 #include <QGraphicsItem>
 #include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QGraphicsSceneMouseEvent>
 #include <QtEvents>
 #include <QPainter>
@@ -12,32 +13,41 @@
 //radius of the nodes
 #define RADIUS 15
 class Edge;
+class Node;
+typedef std::pair<Node*,Edge*> neighbor;
 class Node : public QGraphicsEllipseItem
 {
 public:
   Node(QPointF pos,int id)
-    : adlist()
+    : QGraphicsEllipseItem()
     , id(id)
-    , pos(pos)
+    , adlist()
   {
-    setFlag(ItemIsMovable);
+    setPos(pos);
     setFlag(ItemSendsGeometryChanges);
     setCacheMode(DeviceCoordinateCache);
     setZValue(-1);
     setRect(boundingRect());
     setVisible(true);
     label = QString("%1").arg(id);
-  }
-  QRectF boundingRect() const Q_DECL_OVERRIDE;
-  void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) Q_DECL_OVERRIDE;
-  QPointF getPos() const {return pos;}
+   }
+  QRectF boundingRect() const;
+  bool contains(const QPointF &pos) const;
+  void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
+  void addNeighbor(std::pair<Node*,Edge*> neigh){adlist.push_back(neigh);}
+
+  // map function over all neighbors of node
+//  void mapNeighbors(std::function<void(neighbor)> lambda)
+//  {
+//    std::transform(adlist.begin(),adlist.end(),adlist.begin(),lambda);
+//  }
 private:
   int id;
-  QPointF pos;
-  std::vector<std::pair<Node*,Edge*> > adlist;
+  std::vector<neighbor> adlist;
   QString label;
 };
 
+//this class represents undirected edges.
 class Edge : public QGraphicsLineItem
 {
 public:
@@ -45,18 +55,24 @@ public:
     : label("1")
     , from(from)
     , to(NULL)
-    , start(from->getPos())
-    , end(from->getPos())
+    , start(from->pos())
+    , end(from->pos())
   {
-    setFlag(ItemIsMovable);
     setFlag(ItemSendsGeometryChanges);
     setCacheMode(DeviceCoordinateCache);
+    setZValue(0);
     setVisible(true);
   }
+  QRectF boundingRect() const;
+  void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
+  //setters
   void setEnd(QPointF pos){end = pos;}
-  void setTo(Node* node){end = node->getPos();to = node;}
-  QRectF boundingRect() const Q_DECL_OVERRIDE;
-  void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) Q_DECL_OVERRIDE;
+  void setTo(Node* node){end = node->pos();to = node;}
+  void setStart(QPointF pos){start = pos;}
+  void setFrom(Node* node){start = node->pos();from = node;}
+  //getters
+  Node* getFrom(){return from;}
+  Node* getTo(){return to;}
 private:
   QString label;
   Node* from;
@@ -71,10 +87,10 @@ class graphics : public QGraphicsScene
 public:
   graphics();
   //select actions based on the buttons' state
-  void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
-  void mouseMoveEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
-  void mousePressEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
-  void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
+  void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
+  void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+  void mousePressEvent(QGraphicsSceneMouseEvent *event);
+  void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
   //
 public slots:
   void setNodeDrawMode();

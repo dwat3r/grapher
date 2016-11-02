@@ -10,6 +10,8 @@ MainWindow::MainWindow(QWidget *parent) :
   scene = new graphics;
   ui->graphicsView->setScene(scene);
   ui->graphicsView->show();
+  //TODO: set mouse tracking in statusbar
+
   // connect buttons to draw modes
   connect(ui->actionNode,SIGNAL(triggered()),scene,SLOT(setNodeDrawMode()));
   connect(ui->actionEdge,SIGNAL(triggered()),scene,SLOT(setEdgeDrawMode()));

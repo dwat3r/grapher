@@ -112,8 +112,11 @@
        <property name="cacheMode">
         <set>QGraphicsView::CacheNone</set>
        </property>
+       <property name="transformationAnchor">
+        <enum>QGraphicsView::AnchorUnderMouse</enum>
+       </property>
        <property name="viewportUpdateMode">
-        <enum>QGraphicsView::MinimalViewportUpdate</enum>
+        <enum>QGraphicsView::SmartViewportUpdate</enum>
        </property>
       </widget>
      </item>
