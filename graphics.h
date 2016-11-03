@@ -26,7 +26,7 @@ public:
     setPos(pos);
     setFlag(ItemSendsGeometryChanges);
     setCacheMode(DeviceCoordinateCache);
-    setZValue(-1);
+    setZValue(0);
     setRect(boundingRect());
     setVisible(true);
     label = QString("%1").arg(id);
@@ -60,7 +60,7 @@ public:
   {
     setFlag(ItemSendsGeometryChanges);
     setCacheMode(DeviceCoordinateCache);
-    setZValue(0);
+    setZValue(-1);
     setVisible(true);
   }
   QRectF boundingRect() const;

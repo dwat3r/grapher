@@ -16,6 +16,8 @@ public:
   explicit MainWindow(QWidget *parent = 0);
   ~MainWindow();
 
+  // statusbar
+  bool eventFilter(QObject*,QEvent *event);
 private:
   Ui::MainWindow *ui;
   graphics *scene;

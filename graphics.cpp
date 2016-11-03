@@ -1,5 +1,5 @@
 #include "graphics.h"
-#include <QDebug>
+//#include <QDebug>
 #include <cmath>
 //Node
 QRectF Node::boundingRect() const
@@ -62,7 +62,6 @@ void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
             return;
         }
       Node *node = new Node(event->scenePos(),static_cast<int>(nodes.size()) + 1);
-      qDebug() << node->boundingRect();
       nodes.push_back(node);
       addItem(node);
     }
@@ -131,6 +130,8 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         {
           if(node->contains(event->scenePos()))
             {
+              //disallow parallel edges
+              //if() TODO
               selectedEdge->setTo(node);
               // add neighbors
               node->addNeighbor({selectedEdge->getFrom(),selectedEdge});
