@@ -6,41 +6,37 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QtEvents>
 #include <QPainter>
-#include <string>
 #include <vector>
 #include <utility>
+#include <QMap>
+#include <QTextStream>
 
 //radius of the nodes
 #define RADIUS 15
 class Edge;
 class Node;
 typedef std::pair<Node*,Edge*> neighbor;
+
 class Node : public QGraphicsEllipseItem
 {
 public:
-  Node(QPointF pos,int id)
-    : QGraphicsEllipseItem()
-    , id(id)
-    , adlist()
-  {
-    setPos(pos);
-    setFlag(ItemSendsGeometryChanges);
-    setCacheMode(DeviceCoordinateCache);
-    setZValue(0);
-    setRect(boundingRect());
-    setVisible(true);
-    label = QString("%1").arg(id);
-   }
+  Node(QPointF pos,int id);
+  Node(int id,QString label,QPointF pos)
+    : id(id),adlist(),label(label){setPos(pos);}
+
   QRectF boundingRect() const;
   bool contains(const QPointF &pos) const;
   void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
   void addNeighbor(std::pair<Node*,Edge*> neigh){adlist.push_back(neigh);}
 
-  // map function over all neighbors of node
-//  void mapNeighbors(std::function<void(neighbor)> lambda)
-//  {
-//    std::transform(adlist.begin(),adlist.end(),adlist.begin(),lambda);
-//  }
+  //getters
+  int getId() const {return id;}
+  std::vector<neighbor>& getAdlist() {return adlist;}
+  QString getLabel() const {return label;}
+  //setters
+  void setLabel(QString label) {label = label;}
+  void mapNeighbor(std::function<void(neighbor)> lambda)
+  {std::for_each(adlist.begin(),adlist.end(),lambda);}
 private:
   int id;
   std::vector<neighbor> adlist;
@@ -51,34 +47,31 @@ private:
 class Edge : public QGraphicsLineItem
 {
 public:
-  Edge(Node* from)
-    : label("1")
-    , from(from)
-    , to(NULL)
-    , start(from->pos())
-    , end(from->pos())
-  {
-    setFlag(ItemSendsGeometryChanges);
-    setCacheMode(DeviceCoordinateCache);
-    setZValue(-1);
-    setVisible(true);
-  }
+  Edge(Node* from,int id);
+  Edge(int id,QString label,QPointF start,QPointF end)
+    : label(label),from(NULL),to(NULL),start(start),end(end),id(id){}
+
   QRectF boundingRect() const;
   void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
   //setters
   void setEnd(QPointF pos){end = pos;}
-  void setTo(Node* node){end = node->pos();to = node;}
   void setStart(QPointF pos){start = pos;}
+  void setTo(Node* node){end = node->pos();to = node;}
   void setFrom(Node* node){start = node->pos();from = node;}
   //getters
-  Node* getFrom(){return from;}
-  Node* getTo(){return to;}
+  Node* getFrom() const {return from;}
+  Node* getTo() const {return to;}
+  QString getLabel() const {return label;}
+  QPointF getStart() const {return start;}
+  QPointF getEnd() const {return end;}
+  int getId() const {return id;}
 private:
   QString label;
   Node* from;
   Node* to;
   QPointF start;
   QPointF end;
+  int id;
 };
 //we handle events here.
 class graphics : public QGraphicsScene
@@ -91,7 +84,15 @@ public:
   void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
   void mousePressEvent(QGraphicsSceneMouseEvent *event);
   void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-  //
+
+  //TODO: rewrite to QTextStream
+  //(de)serialization
+  friend QTextStream& operator << (QTextStream& data,graphics &g);
+  friend QTextStream& operator >> (QTextStream& data,graphics &g);
+
+  //reset scene
+  void cleanup();
+
 public slots:
   void setNodeDrawMode();
   void setEdgeDrawMode();

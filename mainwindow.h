@@ -18,7 +18,18 @@ public:
 
   // statusbar
   bool eventFilter(QObject*,QEvent *event);
+public slots:
+  // load/save
+  bool save();
+  void load();
+
+  // misc
+  void about();
+  void help();
+
 private:
+  bool saveFile(const QString &fileName);
+  void loadFile(const QString &fileName);
   Ui::MainWindow *ui;
   graphics *scene;
 };
