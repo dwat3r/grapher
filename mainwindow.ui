@@ -97,7 +97,7 @@
          <enum>QGraphicsView::AnchorUnderMouse</enum>
         </property>
         <property name="viewportUpdateMode">
-         <enum>QGraphicsView::SmartViewportUpdate</enum>
+         <enum>QGraphicsView::FullViewportUpdate</enum>
         </property>
        </widget>
       </item>
