@@ -1,7 +1,6 @@
 #include "graphics.h"
 #include <QDebug>
 #include <cmath>
-#include <iostream>
 
 //Node
 Node::Node(QPointF pos)
@@ -89,7 +88,6 @@ void Node::setState(Node *neigh)
         }
       if(potentialMisEntrant)
         state = C;
-
       inCStateRoundCount = 1;
       // recurse here
     }
@@ -117,7 +115,7 @@ void Node::setState(Node *neigh)
       for (neighbor n : I_pi())
         {
           Node *node = std::get<0>(n);
-          if(node->getState() != nM ||
+          if(node->getState() != nM &&
              node->getState() != M)
             return ;
         }
@@ -132,6 +130,7 @@ void Node::setState(Node *neigh)
       if(misCandidate)
         {
             state = M;
+
         }
       else
         {
@@ -407,13 +406,13 @@ QTextStream& operator << (QTextStream &data,graphics &g)
 {
 
   // these contain the mappings between objects and their serialized ids
-  data.setFieldWidth(5);
+  data.setFieldWidth(10);
   QMap<Node*,qreal> nodepmap;
-  QMap<Edge*,qreal> edgepmap;
+  QMap<Edge*,int> edgepmap;
   /*data looks like this:
   nodesize edgesize
   (first nodes):
-  id label x y [neighborNodeId neigborEdgeId]*
+  id label state incround.. x y [neighborNodeId neigborEdgeId]*
   ###
   (then edges):
   id label startx starty endx endy fromId toId
@@ -428,17 +427,18 @@ QTextStream& operator << (QTextStream &data,graphics &g)
            << node->getInCStateRoundCount()
            << node->pos().x()
            << node->pos().y();
+      qDebug() << node->getId();
       for (neighbor n : node->getAdlist())
         {
           Node* first  = std::get<0>(n);
           Edge* second = std::get<1>(n);
-          if(!(nodepmap[first] > 0))
+          if(!(nodepmap.contains(first)))
             nodepmap[first] = first->getId();
-          if(!(edgepmap[second] > 0))
+          if(!(edgepmap.contains(second)))
             edgepmap[second] = second->getId();
 
           data << nodepmap[first]
-                  << edgepmap[second];
+               << edgepmap[second];
         }
       data << '\n';
     }
@@ -452,9 +452,9 @@ QTextStream& operator << (QTextStream &data,graphics &g)
            << edge->getEnd().x()
            << edge->getEnd().y();
 
-      if(!(nodepmap[edge->getFrom()] > 0))
+      if(!(nodepmap.contains(edge->getFrom())))
         nodepmap[edge->getFrom()] = edge->getFrom()->getId();
-      if(!(nodepmap[edge->getTo()] > 0))
+      if(!(nodepmap.contains(edge->getTo())))
         nodepmap[edge->getTo()] = edge->getTo()->getId();
 
       data << nodepmap[edge->getFrom()]
@@ -467,7 +467,7 @@ QTextStream& operator << (QTextStream &data,graphics &g)
 QTextStream& operator >> (QTextStream &data,graphics &g)
 {
   //id map for storing the ids of objects
-  QMap<int,Node*> nodepmap;
+  QMap<qreal,Node*> nodepmap;
   QMap<int,Edge*> edgepmap;
   //reconstruct objects from serialized objects
   size_t nodesize,edgesize;
@@ -479,10 +479,10 @@ QTextStream& operator >> (QTextStream &data,graphics &g)
 
   for(size_t i = nodesize;i > 0; --i)
     {
-      int id,inCStateRoundCount,state;
+      int inCStateRoundCount,state;
       QString label;
-      qreal x,y;
-      data >> id >> label >> x >> y >> state >> inCStateRoundCount;
+      qreal x,y,id;
+      data >> id >> label >> state >> inCStateRoundCount >> x >> y;
       data.readLine();
 
       Node *node = new Node(id,label,QPointF(x,y),static_cast<status>(state),inCStateRoundCount);
@@ -510,13 +510,13 @@ QTextStream& operator >> (QTextStream &data,graphics &g)
   // we fill up the pointers
   for(size_t i = nodesize;i > 0; --i)
     {
-      int id,n;QString s;
+      qreal id;int n;QString s;
       // skip unneeded first run
-      data >> id >> s >> n >> n;
+      data >> id >> s >> n >> n >> n >> n;
       QStringList sl = data.readLine().split(" ",QString::SkipEmptyParts);
       for(int i =0;i < sl.length(); i += 2)
         {
-          nodepmap[id]->addNeighbor({nodepmap[sl[i].toInt()],edgepmap[sl[i+1].toInt()]});
+          nodepmap[id]->addNeighbor({nodepmap[sl[i].toDouble()],edgepmap[sl[i+1].toInt()]});
         }
     }
   data.readLine();
@@ -525,7 +525,7 @@ QTextStream& operator >> (QTextStream &data,graphics &g)
       int id,n;QString s;
       //skip unneeded
       data >> id >> s >> n >> n >> n >> n;
-      int fid,tid;
+      qreal fid,tid;
       data >> fid >> tid;
       edgepmap[id]->setFrom(nodepmap[fid]);
       edgepmap[id]->setTo(nodepmap[tid]);
@@ -540,9 +540,11 @@ void graphics::removeNode(Node *node)
       if(*i == node)
         {
           removeItem(*i);
-          for (neighbor n : (*i)->getAdlist())
+          for (auto j = (*i)->getAdlist().begin();j!=(*i)->getAdlist().end();)
             {
-              removeEdge(std::get<1>(n));
+              qDebug() << std::get<1>(*j) << std::get<1>(*j)->getId();
+              removeEdge(std::get<1>(*j));
+
             }
           nodes.erase(i);
           node->~Node();
@@ -554,7 +556,8 @@ void graphics::removeEdge(Edge *edge)
 {
   for(auto i = edges.begin();i!= edges.end();++i)
     {
-      if(*i == edge)
+      qDebug() << (*i)->getId() << edge->getId();
+      if((*i)->getId() == edge->getId())
         {
           removeItem(*i);
           edges.erase(i);
