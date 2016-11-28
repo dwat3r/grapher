@@ -89,6 +89,7 @@ void Node::setState(Node *neigh)
         }
       if(potentialMisEntrant)
         state = C;
+
       inCStateRoundCount = 1;
       // recurse here
     }
@@ -106,7 +107,9 @@ void Node::setState(Node *neigh)
           state = R;
         }
       else
-        inCStateRoundCount++;
+        {
+          inCStateRoundCount++;
+        }
       // recurse here
     }
   else if (state == R)
@@ -122,8 +125,9 @@ void Node::setState(Node *neigh)
       bool misCandidate = true;
       for(neighbor n : I_pi())
         {
-          if(std::get<0>(n)->getState() != nM)
+          if(std::get<0>(n)->getState() == nM)
             misCandidate = false;
+            break;
         }
       if(misCandidate)
         {

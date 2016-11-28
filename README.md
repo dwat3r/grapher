@@ -88,11 +88,9 @@ E<sub>π</sub> [|S|] ≤ 1. (ez már szerepelt korábban, többször is). <br />
 **Algorithm 1** -> A Template for Dynamic Correlation Clustering <br />
 Initially, G = (V, E) satisfies the MIS invariant. <br />
 On topology change at node v\* do: <br />
-```
+
 1. Update state of v\* if required for MIS to hold <br />
 2. For i ← 1, until S<sub>i</sub> = ∅, do: <br />
 3.   For every u ∈ S<sub>i</sub> such that i = i<sub>u</sub>: <br />
 4.     Update state of u <br />
 5. i ← i + 1 <br />
-```
-
