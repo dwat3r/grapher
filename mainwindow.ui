@@ -203,9 +203,7 @@
    </attribute>
    <addaction name="actionNode"/>
    <addaction name="actionEdge"/>
-   <addaction name="actionPlay"/>
-   <addaction name="actionPause"/>
-   <addaction name="actionStop"/>
+   <addaction name="actionSetM"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QToolBar" name="toolBar">
@@ -279,12 +277,12 @@
     <string>Pause</string>
    </property>
   </action>
-  <action name="actionStop">
+  <action name="actionSetM">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Stop</string>
+    <string>setM</string>
    </property>
   </action>
  </widget>
