@@ -128,6 +128,7 @@ private:
   Edge *selectedEdge;
   Node *selectedNode;
   enum drawmode{NodeDraw,EdgeDraw} drawmode;
+  int edgeId;
 };
 
 

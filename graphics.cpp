@@ -124,8 +124,10 @@ void Node::setState(Node *neigh)
       for(neighbor n : I_pi())
         {
           if(std::get<0>(n)->getState() == nM)
-            misCandidate = false;
-            break;
+            {
+              misCandidate = false;
+              break;
+            }
         }
       if(misCandidate)
         {
@@ -251,7 +253,7 @@ void Edge::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
 {
   painter->setPen(Qt::black);
   painter->drawLine(start,end);
-  //painter->drawText(boundingRect(),Qt::AlignCenter,label);
+  painter->drawText(boundingRect(),Qt::AlignCenter,QString("%1").arg(id));
 }
 Edge::~Edge()
 {
@@ -267,6 +269,7 @@ graphics::graphics()
   , selectedEdge(NULL)
   , selectedNode(NULL)
   , drawmode(NodeDraw)
+  , edgeId(0)
 {
   srand (static_cast <unsigned> (time(0)));
 }
@@ -278,21 +281,17 @@ void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
   if(drawmode == NodeDraw)
     {
       //if we doubleclicked on an item, delete it
-      bool deleted = false;
       for(Node* node : nodes)
         {
           if(node->contains(event->scenePos()))
             {
               removeNode(node);
-              deleted = true;
+              return;
             }
         }
-      if(!deleted)
-        {
-          Node *node = new Node(event->scenePos());
-          nodes.push_back(node);
-          addItem(node);
-        }
+        Node *node = new Node(event->scenePos());
+        nodes.push_back(node);
+        addItem(node);
     }
   else
     {
@@ -322,7 +321,7 @@ void graphics::mousePressEvent(QGraphicsSceneMouseEvent *event)
             {
               //start of edge draw
 
-              Edge *edge = new Edge(node,static_cast<int>(edges.size()) + 1);
+              Edge *edge = new Edge(node,edgeId++);
               edges.push_back(edge);
               addItem(edge);
               selectedEdge = edge;
@@ -374,8 +373,10 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
               bool cond = false;
               for (neighbor n : node->getAdlist())
                 {
-                  if(std::get<1>(n)->getFrom() == selectedEdge->getFrom() &&
-                     std::get<1>(n)->getTo() == node)
+                  if((std::get<1>(n)->getFrom() == selectedEdge->getFrom() &&
+                     std::get<1>(n)->getTo() == node)||
+                     (std::get<1>(n)->getFrom() == node &&
+                      std::get<1>(n)->getTo() == selectedEdge->getFrom()))
                     {
                       cond = true;
                       break;
