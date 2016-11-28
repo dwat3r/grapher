@@ -2,17 +2,16 @@
 
 ## Bevezetés + fogalmak
 
-MIS megkeresése (igazából nem is megkeresi csak fenntartja) gráfban elosztott rendszer esetén. <br />
+MIS megkeresése (igazából nem is megkeresi csak fenntartja?) gráfban elosztott rendszer esetén. <br />
 
 Független halmaz (IS):
   - Csúcsok olyan halmaza, ahol egyik él között sincs él, azaz szomszédos csúcsok nem szerepelnek benne
-  - Átfogalmazva bármely élnek maximum az egyik végpontja lehet benne
+  - Átfogalmazva bármely élnek maximum az egyik végpontja lehet benne (de lehet, hogy egyik sem)
 
 Maximum független halmaz (MIS):
-  - G gráfban a legnagyobb ilyen ponthalmaz
   - A halmazhoz tetszőleges csúcsot hozzávéve már nem lesz maximális
-  - Egy G gráfnak lehet több ilyenje is (van rá felső korlát)
-  - NP-teljes probléma
+  - Egy G gráfnak lehet több ilyenje is (felső korlát: 3<sup>n/3</sup>)
+  - https://en.wikipedia.org/wiki/Maximal_independent_set
 
 Lokalitása miatt gyorsan számolható *statikusan* elosztott környezetben (*logaritmikus* |V|-hez vagy a csúcsok fokszámához). <br />
 
@@ -21,38 +20,30 @@ Dinamikus eloszott környezetben a topológia folyamatosan változik -> élek/cs
 Ebben a tanulmányban...
   - Lokalitást kihasználva MIS változtatása (frissítése) dinamikus környezetben
   - *Szinkron* vagy *aszinkron* módon
-  - **Egy változtatással** (= várhatóan egy csúcs változtatja meg a kimenetét 1 körben 1 topológia változásra)
+  - **Egy változtatással** (= várhatóan egy csúcs változtatja meg a kimenetét 1 körben), tehát jobb, mint a logaritmikus megoldás!
   - Csúcsok és élek hozzáadásának és eltűnésének bármilyen esetében (*graceful* kilépés vagy hirtelen kiesés)
   - Statikus és dinamikus elosztott modellek különválasztása
   - Determinisztikus és véletlenszerűsített megoldások különválasztása
   - *History independency*: a következő lépés csak az aktuális állapottól függ
 
 ## Az algoritmus: Greedy sequential algorithm
-  - Egyenletes eloszlással (uniform distribution) véletlenszerűen sorbarendezi a csúcsokat, aztán növekvő sorrendben végigmegy rajtuk
+  - Egyenletes eloszlással (uniform distribution) véletlenszerűen sorbarendezi a csúcsokat, aztán növekvő sorrendben veszi őket
   - A csúcsot hozzáadja a MIS-hez, ha nincs a a sorrendben nála kisebb szomszédok közül egyik sem a MIS-ben
   - Csúcs *invariáns tulajdonság*: az állapota csakis a nála kisebb sorszámú szomszédoktól függ
-  - Ha változás történik a gráfban akkor a csúcsoknak lehet, hogy egynél többször kell állapotot váltania, amíg megvan az új MIS
+  - Ha változás történik a gráfban akkor a csúcsoknak lehet, hogy egynél többször kell állapotot váltania
 
-### 1. (legfontosabb) állítás: Tetszőleges változtatás a gráfban - bármilyen véletlenszerű sorrend esetén - legfeljebb egy csúcs kimenetének megváltoztatása
-
-Legyen π csúcsok egy véletlenszerű sorozata, v* az a csúcs, amire nem teljesül az invariáns tulajdonság (ha van ilyen) a topológia-változás után, S pedig csúcsok egy olyan halmaza, amelyeknek változtatniuk kell a kimenetüket az invariáns tulajdonság visszaállításához. Legyen továbbá S' csúcsok olyan halmaza, amiket akkor kellene változtatni, ha π sorrend mellett v* az első elem lenne. <br />
-Ekkor S=S' ha v* sorrendje minimális π sorrend mellett S'-ben, egyébként üres. <br />
-
-Mi a valószínűsége, hogy adott S'-ben v* a minimális sorszámú csúcs?
-  - Determinisztikus eset (π független) = 1/|S'|
-  - S' véletlenszerű halmaz (π nem-uniform) -> mélyebb analízis szükséges
-
-S'-ben π vagy azon csúcsok sorrendjét adja meg, amik nincsenek S'-ben vagy a sorrendet S' \ {v\*}-ban Ezek nincsenek hatással annak valószínűségére, hogy v\* minimális-e S'-ben.
-
+### 1. állítás: Tetszőleges változtatás a gráfban - bármilyen véletlenszerű sorrend esetén - legfeljebb egy csúcs kimenetének megváltozását okozza
 
 ## Eloszott implementáció
 
 G = (V, E) irányítatlan gráfban E(|S|) <= 1, azaz legfeljebb egyetlen változtatás elég a MIS megtartásához dinamikus környezetben. Továbbá várhatóan egyetlen kör elég lesz ehhez. <br />
 Szinkron és aszinkron esetben is igaz lesz. <br />
 
-A csúcsoknak lokálisan csak a saját- és szomszédaik sorrendjéről kell tudnia. <br />
+A csúcsoknak lokálisan csak a nála kisebb sorszámú csúcsok állapotairól kell tudnia. <br />
+Konstans számú kör elég lesz a MIS helyreállításához (de mindig azt írják, hogy *várhatóan* 1 kör).<br />
+Szinkron kommunikáció a csúcsok között körökre osztva (1 kör = 1 broadcast üzenet a szomszédoknak). Az üzenet mérete limitált, maximum O(log(n)) bit lehet, ahol n = |V|. <br />
 
-Szinkron kommunikáció a csúcsok között körökre osztva (1 kör = 1 broadcast üzenet a szomszédoknak). Az üzenet mérete max. O(log(n)) bit lehet, ahol n = |V|.
+A csúcsok outputja megadja a struktúrát (egy csúcs tudja magáról, hogy benne van-e a MIS-ben). <br />
 
 Lehetséges változások a gráfban:
   - Tfh. egyszerre egy változás megy végbe a gráfban megfelelő időt hagyva a helyreállításra, azaz mindig megvan a MIS a kiinduló állapotban (stabil rendszer)
@@ -60,7 +51,7 @@ Lehetséges változások a gráfban:
     - graceful: az üzenetküldések után - amikor már stabil a rendszer - kilép a gráfból (addig használható kommunikációra)
     - hirtelen (*abruptly*): a szomszédai automatikusan detektálják
   - csúcs/él beszúrás:
-    - új: új csúcs lehetségesen több új éllel belép
+    - új: új csúcs lehetségesen több új éllel belép (ezt majd okosan kihagyjuk és csak akkor fogjuk unmuteolni, ha már van éle)
     - *unmute*: addig láthatatlan csúcs csatlakozik, aki addig csak hallgatta a kommunikációt
 
 Komplexitás-vizsgálat:
@@ -68,7 +59,7 @@ Komplexitás-vizsgálat:
   - Kör komplexitás: hány kör alatt megy végbe
   - Broadcast komplexitás: összes broadcast üzenet száma
 
-## Template MIS megtartásához
+## Template MIS megtartásához (absztrakt)
 
 Legyen G = (V, E) gráfban M csúcspontok halmaza úgy, hogy M bármely két csúcsa között nincs él és bármely csúcsnak, ami nincs M-ben van szomszédja M-ben (azaz M MIS?). <br />
 Tekintsük ezt úgy, hogy kezdetben egy üres gráfból indultunk el végig megtartva a MIS-t. <br />
@@ -83,7 +74,7 @@ Legyen v\* csúcs. Él beszúrásánál vagy törlésénél v\* az a végpont, a
 
 [Példa] Új él beszúrása ami v\* és v\*\* élt köti össze, π(v\*\*) < π(v\*) és v\*,v\*\*∈M. Ekkor v\*-ot ki kell törölni M-ből. v\* állapotának megváltozása miatt több változtatásra is szükséges lehet. A lokális változások propagációja során egy csúcs többször is megváltoztathatja az állapotát. Ezért megadunk egy S halmazt, ami a befolyásolt csúcsok (influenced nodes) halmazát jelöli. Ebben azon csúcsok vannak benne, amik v\* változásának hatására változtatniuk kell az állapotukat. <br />
 
-Minden u csúcshoz definiálunk egy I<sub>(π)</sub>(u) = {v ∈ N (u) | π(v) < π(u)} halmazt. Ezek a csúcsok potenciálisan befolyásolhatják u állapotát a MIS invariáns szerint. S definíciója rekurzív a π sorrend szerint. <br />
+A jelölések az új G gráfon alapszanak, kivéve a csúcstörlését, amikor a régi gráfra támaszkodunk (hirtelen kilépésnél is?). Minden u csúcshoz definiálunk egy I<sub>(π)</sub>(u) = {v ∈ N (u) | π(v) < π(u)} halmazt. Ezek a csúcsok potenciálisan befolyásolhatják u állapotát a MIS invariáns szerint. S definíciója rekurzív a π sorrend szerint. <br />
 
 Ha a topológia változás után a G gráf π sorrendezéssel a MIS invariáns fennáll v\*-ra -> S = ∅, azaz nincs befolyásolt csúcs. <br />
 Egyébként S<sub>0</sub> = {v\*} és <br />
@@ -97,9 +88,11 @@ E<sub>π</sub> [|S|] ≤ 1. (ez már szerepelt korábban, többször is). <br />
 **Algorithm 1** -> A Template for Dynamic Correlation Clustering <br />
 Initially, G = (V, E) satisfies the MIS invariant. <br />
 On topology change at node v\* do: <br />
+```
 1. Update state of v\* if required for MIS to hold <br />
-2. For i ← 1, until S i = ∅, do: <br />
+2. For i ← 1, until S<sub>i</sub> = ∅, do: <br />
 3.   For every u ∈ S<sub>i</sub> such that i = i<sub>u</sub>: <br />
 4.     Update state of u <br />
 5. i ← i + 1 <br />
+```
 

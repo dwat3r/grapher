@@ -14,7 +14,7 @@
 #include <random>
 
 //radius of the nodes
-#define RADIUS 15
+#define RADIUS 23
 class Edge;
 class Node;
 typedef std::pair<Node*,Edge*> neighbor;
@@ -43,7 +43,7 @@ public:
   //setters
   void setLabel(QString label) {label = label;}
   // set color of node according to state
-  void setColor();
+  void updateColors();
   //message passing between nodes
   // setState implements Algo 2.
   void setState(Node* neigh);

@@ -1,6 +1,7 @@
 #include "graphics.h"
 #include <QDebug>
 #include <cmath>
+#include <iostream>
 
 //Node
 Node::Node(QPointF pos)
@@ -9,8 +10,8 @@ Node::Node(QPointF pos)
   , inCStateRoundCount(0)
 {
   setPos(pos);
-  label = QString("%1").arg(id);
   id = static_cast <qreal> (rand()) / static_cast <qreal> (RAND_MAX);
+  label = QString::number(id, 'd', 3);
   setPen(QPen(Qt::black,3));
   setFlag(ItemSendsGeometryChanges);
   setCacheMode(DeviceCoordinateCache);
@@ -53,7 +54,7 @@ void Node::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
   painter->drawText(boundingRect(),Qt::AlignCenter,label);
 
 }
-void Node::setColor()
+void Node::updateColors()
 {
   QBrush brush;
   if(state == M)
@@ -67,76 +68,74 @@ void Node::setColor()
   setPen(QPen(brush,3));
   update();
 }
+// Recurse on (every?) state change -> advertise
 void Node::setState(Node *neigh)
 {
   if(state == M && neigh->getId() < id && neigh->getState() == C)
     {
       state = C;
       inCStateRoundCount = 1;
+      // recurse here
     }
   else if(state == nM && neigh->getId() < id && neigh->getState() == C)
     {
-      bool cond = true;
+      bool potentialMisEntrant = true;
       for (neighbor n : I_pi())
         {
           Node *node = std::get<0>(n);
-          if(node != neigh && node->getState() == M)
-            cond = false;
+          if(node != neigh && node->getState() == M) {
+              potentialMisEntrant = false;
+          }
         }
-      if(cond)
+      if(potentialMisEntrant)
         state = C;
       inCStateRoundCount = 1;
+      // recurse here
     }
   else if (state == C)
     {
-      bool cond = true;
+      bool isBiggestC = true;
       for (neighbor n : nI_pi())
         {
           Node *node = std::get<0>(n);
           if(node->getState() == C)
-            cond = false;
+            isBiggestC = false;
         }
-      if(cond && inCStateRoundCount < 2)
+      if(isBiggestC && inCStateRoundCount >= 2)
         {
           state = R;
         }
       else
         inCStateRoundCount++;
+      // recurse here
     }
   else if (state == R)
     {
-      bool cond = true;
       for (neighbor n : I_pi())
         {
           Node *node = std::get<0>(n);
-          if(node->getState() != nM &&
+          if(node->getState() != nM ||
              node->getState() != M)
-            cond = false;
+            return ;
         }
-      if(cond)
+
+      bool misCandidate = true;
+      for(neighbor n : I_pi())
         {
-          bool cond2 = true;
-          for(neighbor n : I_pi())
-            {
-              if(std::get<0>(n)->getState() != nM)
-                cond2 = false;
-            }
-          if(cond2)
-            state = M;
-          else
-            {
-              cond2 = true;
-              for(neighbor n : I_pi())
-                {
-                  if(std::get<0>(n)->getState() != M)
-                    cond2 = false;
-                }
-              if(cond2)
-                state = nM;
-            }
+          if(std::get<0>(n)->getState() != nM)
+            misCandidate = false;
         }
+      if(misCandidate)
+        {
+            state = M;
+        }
+      else
+        {
+            state = nM;
+        }
+      // recurse here
     }
-  setColor();
+  updateColors();
 }
 void Node::advertiseState()
 {
