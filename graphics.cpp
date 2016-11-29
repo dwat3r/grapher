@@ -1,6 +1,9 @@
 #include "graphics.h"
 #include <QDebug>
 #include <cmath>
+#include <QTime>
+#include <QCoreApplication>
+#include <QEventLoop>
 
 //Node
 Node::Node(QPointF pos)
@@ -36,7 +39,7 @@ Node::Node(qreal id,QString label,QPointF pos,status state,int inCStateRoundCoun
 
 void Node::getNodeInfo() const
 {
-  qDebug() << "Node -> id=" << this->id << ", neighbors=" << this->adlist.size() << ", state=" << this->state << " rounds=" << this->inCStateRoundCount;
+  qDebug() << "Node -> id=" << this->id << ", neighbors=" << this->adlist.size() << ", state=" << this->state << " rounds=" << this->inCStateRoundCount+1;
 }
 
 QRectF Node::boundingRect() const
@@ -77,6 +80,13 @@ void Node::updateColors()
 // Recurse on (every?) state change -> advertise
 void Node::updateState(/*Node *neigh*/)
 {
+  qDebug() << "Entering updateState";
+  getNodeInfo();
+
+  QTime dieTime= QTime::currentTime().addMSecs(500);
+  while (QTime::currentTime() < dieTime)
+      QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+
   if(state == M)
     {
       for (neighbor n : I_pi())
@@ -85,8 +95,8 @@ void Node::updateState(/*Node *neigh*/)
           if(node->getState() == C) {
               state = C;
               inCStateRoundCount++;
-              break;
-              // recurse here
+              updateColors();
+              return this->advertiseState();
             }
         }
     }
@@ -110,7 +120,8 @@ void Node::updateState(/*Node *neigh*/)
       if(potentialMisEntrant) {
           state = C;
           inCStateRoundCount++;
-          // recurse here
+          updateColors();
+          return this->advertiseState();
         }
     }
   else if (state == C)
@@ -122,25 +133,28 @@ void Node::updateState(/*Node *neigh*/)
           if(node->getState() == C)
             isBiggestC = false;
         }
-      if(isBiggestC && inCStateRoundCount >= 2)
+      if(isBiggestC && inCStateRoundCount > 1)
         {
           state = R;
+          updateColors();
         }
       else
         {
           inCStateRoundCount++;
         }
-      // recurse here
+      return this->advertiseState();
     }
   else if (state == R)
     {
-      for (neighbor n : I_pi())
-        {
-          Node *node = std::get<0>(n);
-          if(node->getState() != nM &&
-             node->getState() != M)
-            return ;
-        }
+      if( I_pi().size() > 0 ) {
+        for (neighbor n : I_pi())
+          {
+            Node *node = std::get<0>(n);
+            if(node->getState() != nM &&
+               node->getState() != M)
+              return ;
+          }
+      }
 
       bool misCandidate = true;
       for(neighbor n : I_pi())
@@ -160,14 +174,15 @@ void Node::updateState(/*Node *neigh*/)
           state = nM;
         }
       inCStateRoundCount = 0;
-      // recurse here
+      updateColors();
+      //return this->advertiseState();
     }
-  updateColors();
 }
 void Node::advertiseState()
 {
   std::for_each(adlist.begin(),adlist.end(),
                 [this](neighbor n){std::get<0>(n)->updateState();});
+  this->updateState();
 }
 // Call on stable graph only => Nodes are either in state M or nM
 bool Node::checkMIS()
@@ -209,15 +224,17 @@ bool Node::checkMIS()
 std::vector<neighbor> Node::I_pi()
 {
   std::vector<neighbor> pi(adlist);
-  std::remove_if(pi.begin(),pi.end(),
-                 [this](neighbor n){return std::get<0>(n)->getId() > id;});
+  std::vector<neighbor>::iterator it = std::remove_if(pi.begin(),pi.end(), [this](neighbor n){return std::get<0>(n)->getId() > id;});
+  pi.erase( it, pi.end() );
+
   return pi;
 }
 std::vector<neighbor> Node::nI_pi()
 {
   std::vector<neighbor> pi(adlist);
-  std::remove_if(pi.begin(),pi.end(),
-                 [this](neighbor n){return std::get<0>(n)->getId() < id;});
+  std::vector<neighbor>::iterator it = std::remove_if(pi.begin(),pi.end(), [this](neighbor n){return std::get<0>(n)->getId() < id;});
+  pi.erase( it, pi.end() );
+
   return pi;
 }
 void Node::removeNeighbor(Node *node)
@@ -443,6 +460,7 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void graphics::graphModificationListener(Node* changedNode) const
 {
+  qDebug() << "-----------------------------------------------";
   if (changedNode->checkMIS() == false) {
       qDebug() << "MIS invariant violated -> advertising state";
       changedNode->advertiseState();
