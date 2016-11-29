@@ -53,24 +53,25 @@ bool Node::contains(const QPointF &p) const
 }
 void Node::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
 {
-  painter->setPen(Qt::black);
+  painter->setPen(pen());
   painter->setBrush(Qt::white);
   painter->drawEllipse(boundingRect());
+  painter->setPen(Qt::black);
   painter->drawText(boundingRect(),Qt::AlignCenter,label);
 
 }
 void Node::updateColors()
 {
-  QBrush brush;
+  QColor color;
   if(state == M)
-    brush.setColor(Qt::green);
+    color = Qt::green;
   if(state == nM)
-    brush.setColor(Qt::black);
+    color = Qt::black;
   if(state == C)
-    brush.setColor(Qt::yellow);
+    color = Qt::yellow;
   if(state == R)
-    brush.setColor(Qt::red);
-  setPen(QPen(brush,3));
+    color = Qt::red;
+  setPen(QPen(color,3));
   update();
 }
 // Recurse on (every?) state change -> advertise
@@ -95,15 +96,15 @@ void Node::updateState(/*Node *neigh*/)
       for (neighbor n : I_pi())
         {
           Node *node = std::get<0>(n);
-          if(node->getState() == C) {
-              for (neighbor k : I_pi()) {
-                  Node *innerNode = std::get<0>(k);
-                  if(node == innerNode) continue;
-                  if(innerNode->getState() == M) {
+          if(!(node->getState() == C || node->getState() != M)) {
+//              for (neighbor k : I_pi()) {
+//                  Node *innerNode = std::get<0>(k);
+//                  if(node == innerNode) continue;
+//                  if(innerNode->getState() == M) {
                       potentialMisEntrant = false;
                       break;
-                    }
-                }
+//                    }
+//                }
             }
         }
       if(potentialMisEntrant) {
@@ -178,6 +179,7 @@ bool Node::checkMIS()
           if(std::get<0>(n)->getState() != nM)
             {
               state = C;
+              updateColors();
               return false;
             }
         }
@@ -197,6 +199,7 @@ bool Node::checkMIS()
       if (!misInvariantHolds)
         {
           state = C;
+          updateColors();
           return false;
         }
       return true;
