@@ -57,6 +57,7 @@ public:
   std::vector<neighbor> nI_pi();
   // removes neighbor
   void removeNeighbor(Node *node);
+  // trigger this function on graph change (Edge change -> trigger both nodes?)
 private:
   qreal id;
   std::vector<neighbor> adlist;
@@ -109,6 +110,9 @@ public:
   void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
   void mousePressEvent(QGraphicsSceneMouseEvent *event);
   void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
+  // Graph triggered changes
+  void graphModificationListener(Node* changedNode) const;
 
   //TODO: rewrite to QTextStream
   //(de)serialization

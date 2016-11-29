@@ -176,8 +176,8 @@ bool Node::checkMIS()
       for(neighbor n : I_pi())
         {
           if(std::get<0>(n)->getState() != nM)
+            state = C;
             return false;
-            // initialize state change + advertise
         }
       return true;
     }
@@ -192,7 +192,11 @@ bool Node::checkMIS()
               break;
           }
         }
-      if (!misInvariantHolds) return false; // initialize state change + advertise
+      if (!misInvariantHolds)
+        {
+          state = C;
+          return false;
+        }
       return true;
     }
   return false; // This code must be unreachable
@@ -429,6 +433,15 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
+void graphics::graphModificationListener(Node* changedNode) const
+{
+    if (changedNode->checkMIS() == false) {
+        qDebug() << "MIS invariant violated -> advertising state";
+        changedNode->advertiseState();
+    } else {
+        qDebug() << "MIS invariant holds";
+    }
+}
 
 QTextStream& operator << (QTextStream &data,graphics &g)
 {
