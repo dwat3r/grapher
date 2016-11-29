@@ -6,6 +6,7 @@
 Node::Node(QPointF pos)
   : QGraphicsEllipseItem()
   , adlist()
+  , state(nM)
   , inCStateRoundCount(0)
 {
   setPos(pos);
@@ -31,6 +32,11 @@ Node::Node(qreal id,QString label,QPointF pos,status state,int inCStateRoundCoun
   setZValue(0);
   setRect(boundingRect());
   setVisible(true);
+}
+
+void Node::getNodeInfo() const
+{
+    qDebug() << "Node -> id=" << this->id << ", neighbors=" << this->adlist.size() << ", state=" << this->state << " rounds=" << this->inCStateRoundCount;
 }
 
 QRectF Node::boundingRect() const
@@ -68,28 +74,43 @@ void Node::updateColors()
   update();
 }
 // Recurse on (every?) state change -> advertise
-void Node::setState(Node *neigh)
+void Node::updateState(/*Node *neigh*/)
 {
-  if(state == M && neigh->getId() < id && neigh->getState() == C)
+  if(state == M)
     {
-      state = C;
-      inCStateRoundCount = 1;
-      // recurse here
+      for (neighbor n : I_pi())
+        {
+          Node *node = std::get<0>(n);
+          if(node->getState() == C) {
+              state = C;
+              inCStateRoundCount++;
+              break;
+              // recurse here
+          }
+        }
     }
-  else if(state == nM && neigh->getId() < id && neigh->getState() == C)
+  else if(state == nM)
     {
       bool potentialMisEntrant = true;
       for (neighbor n : I_pi())
         {
           Node *node = std::get<0>(n);
-          if(node != neigh && node->getState() == M) {
-              potentialMisEntrant = false;
+          if(node->getState() == C) {
+            for (neighbor k : I_pi()) {
+                Node *innerNode = std::get<0>(n);
+                if(node == innerNode) continue;
+                if(innerNode->getState() == M) {
+                    potentialMisEntrant = false;
+                    break;
+                }
+            }
           }
         }
-      if(potentialMisEntrant)
-        state = C;
-      inCStateRoundCount = 1;
-      // recurse here
+      if(potentialMisEntrant) {
+          state = C;
+          inCStateRoundCount++;
+          // recurse here
+      }
     }
   else if (state == C)
     {
@@ -132,12 +153,12 @@ void Node::setState(Node *neigh)
       if(misCandidate)
         {
             state = M;
-
         }
       else
         {
             state = nM;
         }
+      inCStateRoundCount = 0;
       // recurse here
     }
   updateColors();
@@ -145,9 +166,9 @@ void Node::setState(Node *neigh)
 void Node::advertiseState()
 {
   std::for_each(adlist.begin(),adlist.end(),
-                [this](neighbor n){std::get<0>(n)->setState(this);});
+                [this](neighbor n){std::get<0>(n)->updateState();});
 }
-
+// Call on stable graph only => Nodes are either in state M or nM
 bool Node::checkMIS()
 {
   if(state == M)
@@ -156,19 +177,25 @@ bool Node::checkMIS()
         {
           if(std::get<0>(n)->getState() != nM)
             return false;
+            // initialize state change + advertise
         }
       return true;
     }
   else if(state == nM)
     {
+      bool misInvariantHolds = false;
       for(neighbor n : I_pi())
         {
-          if(!std::get<0>(n)->checkMIS())
-            return false;
+          //if(!std::get<0>(n)->checkMIS())
+          if(std::get<0>(n)->getState() == M ) {
+              misInvariantHolds = true;
+              break;
+          }
         }
+      if (!misInvariantHolds) return false; // initialize state change + advertise
       return true;
     }
-  return false;
+  return false; // This code must be unreachable
 }
 std::vector<neighbor> Node::I_pi()
 {
@@ -253,7 +280,7 @@ void Edge::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
 {
   painter->setPen(Qt::black);
   painter->drawLine(start,end);
-  painter->drawText(boundingRect(),Qt::AlignCenter,QString("%1").arg(id));
+  //painter->drawText(boundingRect(),Qt::AlignCenter,QString("%1").arg(id));
 }
 Edge::~Edge()
 {

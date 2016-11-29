@@ -40,13 +40,14 @@ public:
   QString getLabel() const {return label;}
   status getState() const {return state;}
   int getInCStateRoundCount() const {return inCStateRoundCount;}
+  void getNodeInfo() const;
   //setters
   void setLabel(QString label) {label = label;}
   // set color of node according to state
   void updateColors();
   //message passing between nodes
-  // setState implements Algo 2.
-  void setState(Node* neigh);
+  // updateState implements Algo 2
+  void updateState(/*Node* neigh*/);
   // advertiseState calls neighbor node's setState
   void advertiseState();
   // check mis invariant
