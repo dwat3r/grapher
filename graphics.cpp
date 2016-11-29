@@ -4,34 +4,34 @@
 
 //Node
 Node::Node(QPointF pos)
-  : QGraphicsEllipseItem()
-  , adlist()
-  , state(nM)
-  , inCStateRoundCount(0)
+    : QGraphicsEllipseItem()
+    , adlist()
+    , state(nM)
+    , inCStateRoundCount(0)
 {
-  setPos(pos);
-  id = static_cast <qreal> (rand()) / static_cast <qreal> (RAND_MAX);
-  label = QString::number(id, 'd', 3);
-  setPen(QPen(Qt::black,3));
-  setFlag(ItemSendsGeometryChanges);
-  setCacheMode(DeviceCoordinateCache);
-  setZValue(0);
-  setRect(boundingRect());
-  setVisible(true);
+    setPos(pos);
+    id = static_cast <qreal> (rand()) / static_cast <qreal> (RAND_MAX);
+    label = QString::number(id, 'd', 3);
+    setPen(QPen(Qt::black,3));
+    setFlag(ItemSendsGeometryChanges);
+    setCacheMode(DeviceCoordinateCache);
+    setZValue(0);
+    setRect(boundingRect());
+    setVisible(true);
 }
 Node::Node(qreal id,QString label,QPointF pos,status state,int inCStateRoundCount)
-  : id(id)
-  , label(label)
-  , state(state)
-  , inCStateRoundCount(inCStateRoundCount)
+    : id(id)
+    , label(label)
+    , state(state)
+    , inCStateRoundCount(inCStateRoundCount)
 {
-  setPos(pos);
-  setPen(QPen(Qt::black,3));
-  setFlag(ItemSendsGeometryChanges);
-  setCacheMode(DeviceCoordinateCache);
-  setZValue(0);
-  setRect(boundingRect());
-  setVisible(true);
+    setPos(pos);
+    setPen(QPen(Qt::black,3));
+    setFlag(ItemSendsGeometryChanges);
+    setCacheMode(DeviceCoordinateCache);
+    setZValue(0);
+    setRect(boundingRect());
+    setVisible(true);
 }
 
 void Node::getNodeInfo() const
@@ -41,297 +41,299 @@ void Node::getNodeInfo() const
 
 QRectF Node::boundingRect() const
 {
-  return QRectF(-RADIUS,-RADIUS,
-                2 * RADIUS,2 * RADIUS);
+    return QRectF(-RADIUS,-RADIUS,
+                  2 * RADIUS,2 * RADIUS);
 }
 bool Node::contains(const QPointF &p) const
 {
-  //  return (centerx-10<=mx) && (centerx+10>= mx) &&
-  //(centery-10<=my) && (centery+10>= my);
-  return (x() - RADIUS <= p.x()) && (x() + RADIUS >= p.x()) &&
-      (y() - RADIUS <= p.y()) && (y() + RADIUS >= p.y());
+    //  return (centerx-10<=mx) && (centerx+10>= mx) &&
+    //(centery-10<=my) && (centery+10>= my);
+    return (x() - RADIUS <= p.x()) && (x() + RADIUS >= p.x()) &&
+            (y() - RADIUS <= p.y()) && (y() + RADIUS >= p.y());
 }
 void Node::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
 {
-  painter->setPen(Qt::black);
-  painter->setBrush(Qt::white);
-  painter->drawEllipse(boundingRect());
-  painter->drawText(boundingRect(),Qt::AlignCenter,label);
+    painter->setPen(Qt::black);
+    painter->setBrush(Qt::white);
+    painter->drawEllipse(boundingRect());
+    painter->drawText(boundingRect(),Qt::AlignCenter,label);
 
 }
 void Node::updateColors()
 {
-  QBrush brush;
-  if(state == M)
-    brush.setColor(Qt::green);
-  if(state == nM)
-    brush.setColor(Qt::black);
-  if(state == C)
-    brush.setColor(Qt::yellow);
-  if(state == R)
-    brush.setColor(Qt::red);
-  setPen(QPen(brush,3));
-  update();
+    QBrush brush;
+    if(state == M)
+        brush.setColor(Qt::green);
+    if(state == nM)
+        brush.setColor(Qt::black);
+    if(state == C)
+        brush.setColor(Qt::yellow);
+    if(state == R)
+        brush.setColor(Qt::red);
+    setPen(QPen(brush,3));
+    update();
 }
 // Recurse on (every?) state change -> advertise
 void Node::updateState(/*Node *neigh*/)
 {
-  if(state == M)
+    if(state == M)
     {
-      for (neighbor n : I_pi())
+        for (neighbor n : I_pi())
         {
-          Node *node = std::get<0>(n);
-          if(node->getState() == C) {
-              state = C;
-              inCStateRoundCount++;
-              break;
-              // recurse here
-          }
+            Node *node = std::get<0>(n);
+            if(node->getState() == C) {
+                state = C;
+                inCStateRoundCount++;
+                break;
+                // recurse here
+            }
         }
     }
-  else if(state == nM)
+    else if(state == nM)
     {
-      bool potentialMisEntrant = true;
-      for (neighbor n : I_pi())
+        bool potentialMisEntrant = true;
+        for (neighbor n : I_pi())
         {
-          Node *node = std::get<0>(n);
-          if(node->getState() == C) {
-            for (neighbor k : I_pi()) {
-                Node *innerNode = std::get<0>(n);
-                if(node == innerNode) continue;
-                if(innerNode->getState() == M) {
-                    potentialMisEntrant = false;
-                    break;
+            Node *node = std::get<0>(n);
+            if(node->getState() == C) {
+                for (neighbor k : I_pi()) {
+                    Node *innerNode = std::get<0>(k);
+                    if(node == innerNode) continue;
+                    if(innerNode->getState() == M) {
+                        potentialMisEntrant = false;
+                        break;
+                    }
                 }
             }
-          }
         }
-      if(potentialMisEntrant) {
-          state = C;
-          inCStateRoundCount++;
-          // recurse here
-      }
+        if(potentialMisEntrant) {
+            state = C;
+            inCStateRoundCount++;
+            // recurse here
+        }
     }
-  else if (state == C)
+    else if (state == C)
     {
-      bool isBiggestC = true;
-      for (neighbor n : nI_pi())
+        bool isBiggestC = true;
+        for (neighbor n : nI_pi())
         {
-          Node *node = std::get<0>(n);
-          if(node->getState() == C)
-            isBiggestC = false;
+            Node *node = std::get<0>(n);
+            if(node->getState() == C)
+                isBiggestC = false;
         }
-      if(isBiggestC && inCStateRoundCount >= 2)
+        if(isBiggestC && inCStateRoundCount >= 2)
         {
-          state = R;
+            state = R;
         }
-      else
+        else
         {
-          inCStateRoundCount++;
+            inCStateRoundCount++;
         }
-      // recurse here
+        // recurse here
     }
-  else if (state == R)
+    else if (state == R)
     {
-      for (neighbor n : I_pi())
+        for (neighbor n : I_pi())
         {
-          Node *node = std::get<0>(n);
-          if(node->getState() != nM &&
-             node->getState() != M)
-            return ;
+            Node *node = std::get<0>(n);
+            if(node->getState() != nM &&
+                    node->getState() != M)
+                return ;
         }
 
-      bool misCandidate = true;
-      for(neighbor n : I_pi())
+        bool misCandidate = true;
+        for(neighbor n : I_pi())
         {
-          if(std::get<0>(n)->getState() == nM)
+            if(std::get<0>(n)->getState() == nM)
             {
-              misCandidate = false;
-              break;
+                misCandidate = false;
+                break;
             }
         }
-      if(misCandidate)
+        if(misCandidate)
         {
             state = M;
         }
-      else
+        else
         {
             state = nM;
         }
-      inCStateRoundCount = 0;
-      // recurse here
+        inCStateRoundCount = 0;
+        // recurse here
     }
-  updateColors();
+    updateColors();
 }
 void Node::advertiseState()
 {
-  std::for_each(adlist.begin(),adlist.end(),
-                [this](neighbor n){std::get<0>(n)->updateState();});
+    std::for_each(adlist.begin(),adlist.end(),
+                  [this](neighbor n){std::get<0>(n)->updateState();});
 }
 // Call on stable graph only => Nodes are either in state M or nM
 bool Node::checkMIS()
 {
-  if(state == M)
+    if(state == M)
     {
-      for(neighbor n : I_pi())
+        for(neighbor n : I_pi())
         {
-          if(std::get<0>(n)->getState() != nM)
+            if(std::get<0>(n)->getState() != nM)
+            {
+                state = C;
+                return false;
+            }
+        }
+        return true;
+    }
+    else if(state == nM)
+    {
+        bool misInvariantHolds = false;
+        for(neighbor n : I_pi())
+        {
+            //if(!std::get<0>(n)->checkMIS())
+            if(std::get<0>(n)->getState() == M ) {
+                misInvariantHolds = true;
+                break;
+            }
+        }
+        if (!misInvariantHolds)
+        {
             state = C;
             return false;
         }
-      return true;
+        return true;
     }
-  else if(state == nM)
-    {
-      bool misInvariantHolds = false;
-      for(neighbor n : I_pi())
-        {
-          //if(!std::get<0>(n)->checkMIS())
-          if(std::get<0>(n)->getState() == M ) {
-              misInvariantHolds = true;
-              break;
-          }
-        }
-      if (!misInvariantHolds)
-        {
-          state = C;
-          return false;
-        }
-      return true;
-    }
-  return false; // This code must be unreachable
+    return false; // This code must be unreachable
 }
 std::vector<neighbor> Node::I_pi()
 {
-  std::vector<neighbor> pi(adlist);
-  std::remove_if(pi.begin(),pi.end(),
-                 [this](neighbor n){return std::get<0>(n)->getId() > id;});
-  return pi;
+    std::vector<neighbor> pi(adlist);
+    std::remove_if(pi.begin(),pi.end(),
+                   [this](neighbor n){return std::get<0>(n)->getId() > id;});
+    return pi;
 }
 std::vector<neighbor> Node::nI_pi()
 {
-  std::vector<neighbor> pi(adlist);
-  std::remove_if(pi.begin(),pi.end(),
-                 [this](neighbor n){return std::get<0>(n)->getId() < id;});
-  return pi;
+    std::vector<neighbor> pi(adlist);
+    std::remove_if(pi.begin(),pi.end(),
+                   [this](neighbor n){return std::get<0>(n)->getId() < id;});
+    return pi;
 }
 void Node::removeNeighbor(Node *node)
 {
-  for (auto n = adlist.begin();n!=adlist.end();++n)
+    for (auto n = adlist.begin();n!=adlist.end();++n)
     {
-      if(std::get<0>(*n) == node)
+        if(std::get<0>(*n) == node)
         {
-          adlist.erase(n);
-          return;
+            adlist.erase(n);
+            return;
         }
     }
 }
 Node::~Node()
 {
-  for(neighbor n : adlist)
-      std::get<0>(n)->removeNeighbor(this);
+    for(neighbor n : adlist)
+        std::get<0>(n)->removeNeighbor(this);
 }
 
 //Edge
 Edge::Edge(Node* from,int id)
-  : label("1")
-  , from(from)
-  , to(NULL)
-  , start(from->pos())
-  , end(from->pos())
-  , id(id)
+    : label("1")
+    , from(from)
+    , to(NULL)
+    , start(from->pos())
+    , end(from->pos())
+    , id(id)
 {
-  setFlag(ItemSendsGeometryChanges);
-  setCacheMode(DeviceCoordinateCache);
-  setZValue(-1);
-  setVisible(true);
+    setFlag(ItemSendsGeometryChanges);
+    setCacheMode(DeviceCoordinateCache);
+    setZValue(-1);
+    setVisible(true);
 }
 Edge::Edge(int id,QString label,QPointF start,QPointF end)
-  : label(label)
-  ,from(NULL)
-  ,to(NULL)
-  ,start(start)
-  ,end(end)
-  ,id(id)
+    : label(label)
+    ,from(NULL)
+    ,to(NULL)
+    ,start(start)
+    ,end(end)
+    ,id(id)
 {
-  setFlag(ItemSendsGeometryChanges);
-  setCacheMode(DeviceCoordinateCache);
-  setZValue(-1);
-  setVisible(true);
+    setFlag(ItemSendsGeometryChanges);
+    setCacheMode(DeviceCoordinateCache);
+    setZValue(-1);
+    setVisible(true);
 }
 QRectF Edge::boundingRect() const
 {
-  //min(x0, x1), min(y0, y1), abs(x1-x0), abs(y1-y0)
-  return QRectF(std::min(start.x(),end.x()),std::min(start.y(),end.y()),
-                std::abs(end.x()-start.x()),std::abs(end.y()-start.y()));
+    //min(x0, x1), min(y0, y1), abs(x1-x0), abs(y1-y0)
+    return QRectF(std::min(start.x(),end.x()),std::min(start.y(),end.y()),
+                  std::abs(end.x()-start.x()),std::abs(end.y()-start.y()));
 }
 //from stackoverflow:
 //http://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
 qreal dist2(QPointF v, QPointF w) { return std::pow(v.x() - w.x(),2) + std::pow(v.y() - w.y(),2); }
 qreal distToSegment(QPointF p, QPointF v, QPointF w)
 {
-  qreal t = ((p.x() - v.x()) * (w.x() - v.x()) + (p.y() - v.y()) * (w.y() - v.y())) / dist2(v, w);
-  t = std::max(0.0, std::min(1.0, t));
-  return std::sqrt(dist2(p, QPointF(v.x() + t * (w.x() - v.x()),v.y() + t * (w.y() - v.y()))));
+    qreal t = ((p.x() - v.x()) * (w.x() - v.x()) + (p.y() - v.y()) * (w.y() - v.y())) / dist2(v, w);
+    t = std::max(0.0, std::min(1.0, t));
+    return std::sqrt(dist2(p, QPointF(v.x() + t * (w.x() - v.x()),v.y() + t * (w.y() - v.y()))));
 }
 
 bool Edge::contains(const QPointF &pos) const
 {
-  return distToSegment(pos,start,end) < 10;
+    return distToSegment(pos,start,end) < 10;
 }
 
 void Edge::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
 {
-  painter->setPen(Qt::black);
-  painter->drawLine(start,end);
-  //painter->drawText(boundingRect(),Qt::AlignCenter,QString("%1").arg(id));
+    painter->setPen(Qt::black);
+    painter->drawLine(start,end);
+    //painter->drawText(boundingRect(),Qt::AlignCenter,QString("%1").arg(id));
 }
 Edge::~Edge()
 {
-  from->removeNeighbor(to);
-  to->removeNeighbor(from);
+    from->removeNeighbor(to);
+    to->removeNeighbor(from);
 }
 
 //graphics
 graphics::graphics()
-  : QGraphicsScene()
-  , nodes()
-  , edges()
-  , selectedEdge(NULL)
-  , selectedNode(NULL)
-  , drawmode(NodeDraw)
-  , edgeId(0)
+    : QGraphicsScene()
+    , nodes()
+    , edges()
+    , selectedEdge(NULL)
+    , selectedNode(NULL)
+    , drawmode(NodeDraw)
+    , edgeId(0)
 {
-  srand (static_cast <unsigned> (time(0)));
+    srand (static_cast <unsigned> (time(0)));
 }
 
 void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
 
 
-  if(drawmode == NodeDraw)
+    if(drawmode == NodeDraw)
     {
-      //if we doubleclicked on an item, delete it
-      for(Node* node : nodes)
+        //if we doubleclicked on an item, delete it
+        for(Node* node : nodes)
         {
-          if(node->contains(event->scenePos()))
+            if(node->contains(event->scenePos()))
             {
-              removeNode(node);
-              return;
+                removeNode(node);
+                return;
             }
         }
         Node *node = new Node(event->scenePos());
         nodes.push_back(node);
         addItem(node);
     }
-  else
+    else
     {
-      for(Edge* edge : edges)
+        for(Edge* edge : edges)
         {
-          if(edge->contains(event->scenePos()))
+            if(edge->contains(event->scenePos()))
             {
-              removeEdge(edge);
-              return;
+                removeEdge(edge);
+                return;
             }
         }
     }
@@ -339,23 +341,23 @@ void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 
 void graphics::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-  for(Node* node : nodes)
+    for(Node* node : nodes)
     {
-      if(node->contains(event->scenePos()))
+        if(node->contains(event->scenePos()))
         {
-          if(drawmode == NodeDraw)
+            if(drawmode == NodeDraw)
             {
-              //select node to move
-              selectedNode = node;
+                //select node to move
+                selectedNode = node;
             }
-          else
+            else
             {
-              //start of edge draw
+                //start of edge draw
 
-              Edge *edge = new Edge(node,edgeId++);
-              edges.push_back(edge);
-              addItem(edge);
-              selectedEdge = edge;
+                Edge *edge = new Edge(node,edgeId++);
+                edges.push_back(edge);
+                addItem(edge);
+                selectedEdge = edge;
             }
         }
     }
@@ -364,71 +366,71 @@ void graphics::mousePressEvent(QGraphicsSceneMouseEvent *event)
 void graphics::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
 
-  if(drawmode == NodeDraw && selectedNode != NULL)
+    if(drawmode == NodeDraw && selectedNode != NULL)
     {
-      // node movement
-      selectedNode->setPos(event->scenePos());
-      // move connected edges
-      for (Edge* edge : edges)
+        // node movement
+        selectedNode->setPos(event->scenePos());
+        // move connected edges
+        for (Edge* edge : edges)
         {
-          if(edge->getFrom() == selectedNode)
-            edge->setStart(selectedNode->scenePos());
-          if(edge->getTo() == selectedNode)
-            edge->setEnd(selectedNode->scenePos());
+            if(edge->getFrom() == selectedNode)
+                edge->setStart(selectedNode->scenePos());
+            if(edge->getTo() == selectedNode)
+                edge->setEnd(selectedNode->scenePos());
         }
-      update();
+        update();
     }
-  else if (selectedEdge != NULL)
+    else if (selectedEdge != NULL)
     {
-      // edge draw
-      selectedEdge->setEnd(event->scenePos());
-      update();
+        // edge draw
+        selectedEdge->setEnd(event->scenePos());
+        update();
     }
 }
 
 void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-  if(drawmode == NodeDraw && selectedNode != NULL)
+    if(drawmode == NodeDraw && selectedNode != NULL)
     {
-      // stop moving node
-      selectedNode = NULL;
+        // stop moving node
+        selectedNode = NULL;
     }
-  else if (selectedEdge != NULL)
+    else if (selectedEdge != NULL)
     {
-      // end of edge draw
-      for(Node* node : nodes)
+        // end of edge draw
+        for(Node* node : nodes)
         {
-          if(node->contains(event->scenePos()))
+            if(node->contains(event->scenePos()))
             {
-              //disallow parallel edges
-              bool cond = false;
-              for (neighbor n : node->getAdlist())
+                //disallow parallel edges
+                bool cond = false;
+                for (neighbor n : node->getAdlist())
                 {
-                  if((std::get<1>(n)->getFrom() == selectedEdge->getFrom() &&
-                     std::get<1>(n)->getTo() == node)||
-                     (std::get<1>(n)->getFrom() == node &&
-                      std::get<1>(n)->getTo() == selectedEdge->getFrom()))
+                    if((std::get<1>(n)->getFrom() == selectedEdge->getFrom() &&
+                        std::get<1>(n)->getTo() == node)||
+                            (std::get<1>(n)->getFrom() == node &&
+                             std::get<1>(n)->getTo() == selectedEdge->getFrom()))
                     {
-                      cond = true;
-                      break;
+                        cond = true;
+                        break;
                     }
                 }
-              if(!cond)
+                if(!cond)
                 {
-                  selectedEdge->setTo(node);
-                  // add neighbors
-                  node->addNeighbor({selectedEdge->getFrom(),selectedEdge});
-                  selectedEdge->getFrom()->addNeighbor({node,selectedEdge});
-                  update();
-                  selectedEdge = NULL;
+                    selectedEdge->setTo(node);
+                    // add neighbors
+                    node->addNeighbor({selectedEdge->getFrom(),selectedEdge});
+                    selectedEdge->getFrom()->addNeighbor({node,selectedEdge});
+                    update();
+                    selectedEdge = NULL;
                 }
             }
         }
-      if(selectedEdge != NULL)
+        if(selectedEdge != NULL)
         {
-          removeItem(selectedEdge);
-          selectedEdge = NULL;
-          edges.pop_back();
+            removeItem(selectedEdge);
+            selectedEdge = NULL;
+            edges.pop_back();
         }
     }
 }
@@ -446,11 +448,11 @@ void graphics::graphModificationListener(Node* changedNode) const
 QTextStream& operator << (QTextStream &data,graphics &g)
 {
 
-  // these contain the mappings between objects and their serialized ids
-  data.setFieldWidth(10);
-  QMap<Node*,qreal> nodepmap;
-  QMap<Edge*,int> edgepmap;
-  /*data looks like this:
+    // these contain the mappings between objects and their serialized ids
+    data.setFieldWidth(10);
+    QMap<Node*,qreal> nodepmap;
+    QMap<Edge*,int> edgepmap;
+    /*data looks like this:
   nodesize edgesize
   (first nodes):
   id label state incround.. x y [neighborNodeId neigborEdgeId]*
@@ -458,158 +460,158 @@ QTextStream& operator << (QTextStream &data,graphics &g)
   (then edges):
   id label startx starty endx endy fromId toId
   */
-  data << g.nodes.size() << g.edges.size() << '\n';
+    data << g.nodes.size() << g.edges.size() << '\n';
 
-  for (Node* node : g.nodes)
+    for (Node* node : g.nodes)
     {
-      data << node->getId()
-           << node->getLabel()
-           << node->getState()
-           << node->getInCStateRoundCount()
-           << node->pos().x()
-           << node->pos().y();
-      qDebug() << node->getId();
-      for (neighbor n : node->getAdlist())
+        data << node->getId()
+             << node->getLabel()
+             << node->getState()
+             << node->getInCStateRoundCount()
+             << node->pos().x()
+             << node->pos().y();
+        qDebug() << node->getId();
+        for (neighbor n : node->getAdlist())
         {
-          Node* first  = std::get<0>(n);
-          Edge* second = std::get<1>(n);
-          if(!(nodepmap.contains(first)))
-            nodepmap[first] = first->getId();
-          if(!(edgepmap.contains(second)))
-            edgepmap[second] = second->getId();
+            Node* first  = std::get<0>(n);
+            Edge* second = std::get<1>(n);
+            if(!(nodepmap.contains(first)))
+                nodepmap[first] = first->getId();
+            if(!(edgepmap.contains(second)))
+                edgepmap[second] = second->getId();
 
-          data << nodepmap[first]
-               << edgepmap[second];
+            data << nodepmap[first]
+                    << edgepmap[second];
         }
-      data << '\n';
+        data << '\n';
     }
-  data << "###\n";
-  for (Edge* edge : g.edges)
+    data << "###\n";
+    for (Edge* edge : g.edges)
     {
-      data << edge->getId()
-           << edge->getLabel()
-           << edge->getStart().x()
-           << edge->getStart().y()
-           << edge->getEnd().x()
-           << edge->getEnd().y();
+        data << edge->getId()
+             << edge->getLabel()
+             << edge->getStart().x()
+             << edge->getStart().y()
+             << edge->getEnd().x()
+             << edge->getEnd().y();
 
-      if(!(nodepmap.contains(edge->getFrom())))
-        nodepmap[edge->getFrom()] = edge->getFrom()->getId();
-      if(!(nodepmap.contains(edge->getTo())))
-        nodepmap[edge->getTo()] = edge->getTo()->getId();
+        if(!(nodepmap.contains(edge->getFrom())))
+            nodepmap[edge->getFrom()] = edge->getFrom()->getId();
+        if(!(nodepmap.contains(edge->getTo())))
+            nodepmap[edge->getTo()] = edge->getTo()->getId();
 
-      data << nodepmap[edge->getFrom()]
-          << nodepmap[edge->getTo()] << "\n";
+        data << nodepmap[edge->getFrom()]
+                << nodepmap[edge->getTo()] << "\n";
     }
 
-  return data;
+    return data;
 }
 
 QTextStream& operator >> (QTextStream &data,graphics &g)
 {
-  //id map for storing the ids of objects
-  QMap<qreal,Node*> nodepmap;
-  QMap<int,Edge*> edgepmap;
-  //reconstruct objects from serialized objects
-  size_t nodesize,edgesize;
+    //id map for storing the ids of objects
+    QMap<qreal,Node*> nodepmap;
+    QMap<int,Edge*> edgepmap;
+    //reconstruct objects from serialized objects
+    size_t nodesize,edgesize;
 
-  data >> nodesize >> edgesize;
+    data >> nodesize >> edgesize;
 
-  // first run:
-  // ignore pointers since we dont have the objects yet
+    // first run:
+    // ignore pointers since we dont have the objects yet
 
-  for(size_t i = nodesize;i > 0; --i)
+    for(size_t i = nodesize;i > 0; --i)
     {
-      int inCStateRoundCount,state;
-      QString label;
-      qreal x,y,id;
-      data >> id >> label >> state >> inCStateRoundCount >> x >> y;
-      data.readLine();
+        int inCStateRoundCount,state;
+        QString label;
+        qreal x,y,id;
+        data >> id >> label >> state >> inCStateRoundCount >> x >> y;
+        data.readLine();
 
-      Node *node = new Node(id,label,QPointF(x,y),static_cast<status>(state),inCStateRoundCount);
-      g.nodes.push_back(node);
-      g.addItem(node);
-      nodepmap[id] = node;
+        Node *node = new Node(id,label,QPointF(x,y),static_cast<status>(state),inCStateRoundCount);
+        g.nodes.push_back(node);
+        g.addItem(node);
+        nodepmap[id] = node;
     }
-  data.readLine();//ignore ###
-  for(size_t i = edgesize;i > 0; --i)
+    data.readLine();//ignore ###
+    for(size_t i = edgesize;i > 0; --i)
     {
-      int id;
-      QString label;
-      qreal x1,y1,x2,y2;
-      data >> id >> label >> x1 >> y1 >> x2 >> y2;
-      data.readLine();
+        int id;
+        QString label;
+        qreal x1,y1,x2,y2;
+        data >> id >> label >> x1 >> y1 >> x2 >> y2;
+        data.readLine();
 
-      Edge *edge = new Edge(id,label,QPointF(x1,y1),QPointF(x2,y2));
-      g.edges.push_back(edge);
-      g.addItem(edge);
-      edgepmap[id] = edge;
+        Edge *edge = new Edge(id,label,QPointF(x1,y1),QPointF(x2,y2));
+        g.edges.push_back(edge);
+        g.addItem(edge);
+        edgepmap[id] = edge;
     }
-  data.seek(0);
-  data.readLine();
-  // second run:
-  // we fill up the pointers
-  for(size_t i = nodesize;i > 0; --i)
+    data.seek(0);
+    data.readLine();
+    // second run:
+    // we fill up the pointers
+    for(size_t i = nodesize;i > 0; --i)
     {
-      qreal id;int n;QString s;
-      // skip unneeded first run
-      data >> id >> s >> n >> n >> n >> n;
-      QStringList sl = data.readLine().split(" ",QString::SkipEmptyParts);
-      for(int i =0;i < sl.length(); i += 2)
+        qreal id;int n;QString s;
+        // skip unneeded first run
+        data >> id >> s >> n >> n >> n >> n;
+        QStringList sl = data.readLine().split(" ",QString::SkipEmptyParts);
+        for(int i =0;i < sl.length(); i += 2)
         {
-          nodepmap[id]->addNeighbor({nodepmap[sl[i].toDouble()],edgepmap[sl[i+1].toInt()]});
+            nodepmap[id]->addNeighbor({nodepmap[sl[i].toDouble()],edgepmap[sl[i+1].toInt()]});
         }
     }
-  data.readLine();
-  for(size_t i = edgesize;i > 0; --i)
+    data.readLine();
+    for(size_t i = edgesize;i > 0; --i)
     {
-      int id,n;QString s;
-      //skip unneeded
-      data >> id >> s >> n >> n >> n >> n;
-      qreal fid,tid;
-      data >> fid >> tid;
-      edgepmap[id]->setFrom(nodepmap[fid]);
-      edgepmap[id]->setTo(nodepmap[tid]);
+        int id,n;QString s;
+        //skip unneeded
+        data >> id >> s >> n >> n >> n >> n;
+        qreal fid,tid;
+        data >> fid >> tid;
+        edgepmap[id]->setFrom(nodepmap[fid]);
+        edgepmap[id]->setTo(nodepmap[tid]);
     }
-  return data;
+    return data;
 }
 
 void graphics::removeNode(Node *node)
 {
-  for(auto i = nodes.begin();i!= nodes.end();++i)
+    for(auto i = nodes.begin();i!= nodes.end();++i)
     {
-      if(*i == node)
+        if(*i == node)
         {
-          removeItem(*i);
-          for (auto j = (*i)->getAdlist().begin();j!=(*i)->getAdlist().end();)
+            removeItem(*i);
+            for (auto j = (*i)->getAdlist().begin();j!=(*i)->getAdlist().end();)
             {
-              qDebug() << std::get<1>(*j) << std::get<1>(*j)->getId();
-              removeEdge(std::get<1>(*j));
+                qDebug() << std::get<1>(*j) << std::get<1>(*j)->getId();
+                removeEdge(std::get<1>(*j));
 
             }
-          nodes.erase(i);
-          node->~Node();
-          return;
+            nodes.erase(i);
+            node->~Node();
+            return;
         }
     }
 }
 void graphics::removeEdge(Edge *edge)
 {
-  for(auto i = edges.begin();i!= edges.end();++i)
+    for(auto i = edges.begin();i!= edges.end();++i)
     {
-      qDebug() << (*i)->getId() << edge->getId();
-      if((*i)->getId() == edge->getId())
+        qDebug() << (*i)->getId() << edge->getId();
+        if((*i)->getId() == edge->getId())
         {
-          removeItem(*i);
-          edges.erase(i);
-          edge->~Edge();
-          return;
+            removeItem(*i);
+            edges.erase(i);
+            edge->~Edge();
+            return;
         }
     }
 }
 void graphics::cleanup()
 {
-  clear();
-  nodes.clear();
-  edges.clear();
+    clear();
+    nodes.clear();
+    edges.clear();
 }
