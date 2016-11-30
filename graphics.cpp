@@ -80,7 +80,7 @@ void Node::updateColors()
 // Recurse on (every?) state change -> advertise
 void Node::updateState(/*Node *neigh*/)
 {
-  qDebug() << "Entering updateState";
+  qDebug() << "Entering updateState at...";
   getNodeInfo();
 
   QTime dieTime= QTime::currentTime().addMSecs(300);
@@ -221,6 +221,7 @@ bool Node::checkMIS()
     }
   return false; // This code must be unreachable
 }
+
 std::vector<neighbor> Node::I_pi()
 {
   std::vector<neighbor> pi(adlist);
@@ -338,7 +339,10 @@ void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
         {
           if(node->contains(event->scenePos()))
             {
+              //graphModificationListener(node);
+              std::vector<neighbor> notifiableNeighbors = node->getAdlist();
               removeNode(node);
+              massCheckMIS(notifiableNeighbors);
               return;
             }
         }
@@ -466,6 +470,14 @@ void graphics::graphModificationListener(Node* changedNode) const
       changedNode->advertiseState();
     } else {
       qDebug() << "MIS invariant holds";
+    }
+}
+
+void graphics::massCheckMIS(const std::vector<neighbor>& toNotify) {
+  for (auto n = toNotify.begin();n!=toNotify.end();++n)
+    {
+      //std::get<0>(*n)->checkMIS();
+      graphModificationListener(std::get<0>(*n));
     }
 }
 

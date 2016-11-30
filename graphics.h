@@ -113,6 +113,7 @@ public:
 
   // Graph triggered changes
   void graphModificationListener(Node* changedNode) const;
+  void massCheckMIS(const std::vector<neighbor>& toNotify);
 
   //TODO: rewrite to QTextStream
   //(de)serialization
