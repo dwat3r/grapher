@@ -427,17 +427,24 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         {
           if(node->contains(event->scenePos()))
             {
-              //disallow parallel edges
+              //disallow parallel and loop edges
               bool cond = false;
-              for (neighbor n : node->getAdlist())
+              //loop
+              if (selectedEdge->getFrom() == node)
+                cond = true;
+              //parallel
+              else
                 {
-                  if((std::get<1>(n)->getFrom() == selectedEdge->getFrom() &&
-                      std::get<1>(n)->getTo() == node)||
-                     (std::get<1>(n)->getFrom() == node &&
-                      std::get<1>(n)->getTo() == selectedEdge->getFrom()))
+                  for (neighbor n : node->getAdlist())
                     {
-                      cond = true;
-                      break;
+                      if((std::get<1>(n)->getFrom() == selectedEdge->getFrom() &&
+                          std::get<1>(n)->getTo() == node)||
+                         (std::get<1>(n)->getFrom() == node &&
+                          std::get<1>(n)->getTo() == selectedEdge->getFrom()))
+                        {
+                          cond = true;
+                          break;
+                        }
                     }
                 }
               if(!cond)
@@ -451,6 +458,7 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
                   graphModificationListener(selectedEdge->getTo());
                   selectedEdge = NULL;
                 }
+            break;
             }
         }
       if(selectedEdge != NULL)
