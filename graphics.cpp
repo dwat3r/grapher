@@ -1,5 +1,6 @@
 #include "graphics.h"
 #include <QDebug>
+#include <set>
 #include <cmath>
 #include <QTime>
 #include <QCoreApplication>
@@ -334,7 +335,7 @@ void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
           if(node->contains(event->scenePos()))
             {
               //graphModificationListener(node);
-              std::vector<neighbor> notifiableNeighbors = node->getAdlist();
+              std::vector<neighbor> notifiableNeighbors(std::move(node->getAdlist()));
               removeNode(node);
               massCheckMIS(notifiableNeighbors);
               return;
@@ -351,7 +352,14 @@ void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
         {
           if(edge->contains(event->scenePos()))
             {
+              std::vector<neighbor> tmp = edge->getFrom()->getAdlist();
+              std::vector<neighbor> tmp2 = edge->getTo()->getAdlist();
+              std::set<neighbor> unio(tmp.begin(),tmp.end());
+              unio.insert(tmp2.begin(),tmp2.end());
+              std::vector<neighbor> notifiableNeighbors(unio.begin(),
+                                                        unio.end());
               removeEdge(edge);
+              massCheckMIS(notifiableNeighbors);
               return;
             }
         }
