@@ -83,7 +83,7 @@ void Node::updateState(/*Node *neigh*/)
   qDebug() << "Entering updateState";
   getNodeInfo();
 
-  QTime dieTime= QTime::currentTime().addMSecs(500);
+  QTime dieTime= QTime::currentTime().addMSecs(300);
   while (QTime::currentTime() < dieTime)
       QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 
@@ -159,7 +159,7 @@ void Node::updateState(/*Node *neigh*/)
       bool misCandidate = true;
       for(neighbor n : I_pi())
         {
-          if(std::get<0>(n)->getState() == nM)
+          if(std::get<0>(n)->getState() == M)
             {
               misCandidate = false;
               break;
