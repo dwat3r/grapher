@@ -164,10 +164,11 @@ void graphics::removeNode(Node *node)
       if(*i == node)
         {
           removeItem(*i);
-          for (auto j = (*i)->getAdlist().begin();j!=(*i)->getAdlist().end();)
+          std::vector<neighbor> n(std::move((*i)->getAdlist()));
+          for (neighbor j : n)
             {
-              qDebug() << std::get<1>(*j) << std::get<1>(*j)->getId();
-              removeEdge(std::get<1>(*j));
+              qDebug() << std::get<1>(j) << std::get<1>(j)->getId();
+              removeEdge(std::get<1>(j));
 
             }
           nodes.erase(i);

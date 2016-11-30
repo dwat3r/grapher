@@ -4,7 +4,7 @@
 #include <QtGui>
 #include <QGraphicsEllipseItem>
 
-#define RADIUS 23
+#define RADIUS 10
 class Node;
 class Edge;
 typedef std::pair<Node*,Edge*> neighbor;

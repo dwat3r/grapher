@@ -8,8 +8,7 @@ Node::Node(QPointF pos,int id)
   , id(id)
 {
   setPos(pos);
-  label = QString::number(id, 'd', 3);
-  setPen(QPen(Qt::black,3));
+  label = QString::number(id);
   setFlag(ItemSendsGeometryChanges);
   setCacheMode(DeviceCoordinateCache);
   setZValue(0);
@@ -21,7 +20,7 @@ Node::Node(int id,QString label,QPointF pos)
   , label(label)
 {
   setPos(pos);
-  setPen(QPen(Qt::black,3));
+  setPen(pen());
   setFlag(ItemSendsGeometryChanges);
   setCacheMode(DeviceCoordinateCache);
   setZValue(0);
@@ -58,11 +57,11 @@ void Node::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
 
 void Node::removeNeighbor(Node *node)
 {
-  for (auto n = adlist.begin();n!=adlist.end();++n)
+  for (auto n = adlist.begin();n != adlist.end();)
     {
       if(std::get<0>(*n) == node)
         {
-          adlist.erase(n);
+          n = adlist.erase(n);
           return;
         }
     }
