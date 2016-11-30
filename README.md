@@ -1,3 +1,8 @@
-﻿# Maximum weighted bipartite matching
+# grapher
+graph drawing tool in Qt
 
-https://en.wikipedia.org/wiki/Matching_(graph_theory)
+has two branches:
+
+-matching: maximum weighted bipartite matching visualization
+
+-mis: distributed dynamic maximal independent set visualization
