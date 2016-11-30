@@ -85,7 +85,7 @@ void Node::updateState(/*Node *neigh*/)
 
   QTime dieTime= QTime::currentTime().addMSecs(300);
   while (QTime::currentTime() < dieTime)
-      QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 
   if(state == M)
     {
@@ -107,14 +107,8 @@ void Node::updateState(/*Node *neigh*/)
         {
           Node *node = std::get<0>(n);
           if(!(node->getState() == C || node->getState() != M)) {
-//              for (neighbor k : I_pi()) {
-//                  Node *innerNode = std::get<0>(k);
-//                  if(node == innerNode) continue;
-//                  if(innerNode->getState() == M) {
-                      potentialMisEntrant = false;
-                      break;
-//                    }
-//                }
+              potentialMisEntrant = false;
+              break;
             }
         }
       if(potentialMisEntrant) {
@@ -147,14 +141,14 @@ void Node::updateState(/*Node *neigh*/)
   else if (state == R)
     {
       if( I_pi().size() > 0 ) {
-        for (neighbor n : I_pi())
-          {
-            Node *node = std::get<0>(n);
-            if(node->getState() != nM &&
-               node->getState() != M)
-              return ;
-          }
-      }
+          for (neighbor n : I_pi())
+            {
+              Node *node = std::get<0>(n);
+              if(node->getState() != nM &&
+                 node->getState() != M)
+                return ;
+            }
+        }
 
       bool misCandidate = true;
       for(neighbor n : I_pi())
@@ -458,7 +452,7 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
                   graphModificationListener(selectedEdge->getTo());
                   selectedEdge = NULL;
                 }
-            break;
+              break;
             }
         }
       if(selectedEdge != NULL)
