@@ -1,9 +1,8 @@
 #include "graphics.h"
-
-#include <ctime>
 #include <QTime>
 #include <QCoreApplication>
 #include <QEventLoop>
+#include <ctime>
 
 
 //graphics

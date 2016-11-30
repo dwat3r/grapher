@@ -1,11 +1,11 @@
 #include "node.h"
-#include <ctime>
 #include <QDebug>
+#include <ctime>
 
 Node::Node(QPointF pos,int id)
   : QGraphicsEllipseItem()
-  , adlist()
   , id(id)
+  , adlist()
 {
   setPos(pos);
   label = QString::number(id);
