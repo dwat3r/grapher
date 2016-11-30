@@ -1,8 +1,8 @@
 # grapher
 graph drawing tool in Qt
 
-has two branches:
+## has two branches:
 
--matching: maximum weighted bipartite matching visualization
+- matching: maximum weighted bipartite matching visualization
 
--mis: distributed dynamic maximal independent set visualization
+- mis: distributed dynamic maximal independent set visualization
