@@ -13,9 +13,14 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
+        node.cpp \
+        edge.cpp \
         graphics.cpp
 
+
 HEADERS  += mainwindow.h \
+         node.h \
+         edge.h \
          graphics.h
 
 FORMS    += mainwindow.ui
@@ -28,5 +33,4 @@ FORMS    += mainwindow.ui
 
 win32 {
   CONFIG += c++11
-  INCLUDEPATH += C:\local\boost_1_62_0
 }
