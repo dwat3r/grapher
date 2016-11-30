@@ -1,7 +1,5 @@
 #include "graphics.h"
-#include "node.h"
-#include "edge.h"
-#include <QDebug>
+
 #include <ctime>
 #include <QTime>
 #include <QCoreApplication>
@@ -31,12 +29,11 @@ void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
         {
           if(node->contains(event->scenePos()))
             {
-              //graphModificationListener(node);
               removeNode(node);
               return;
             }
         }
-      Node *node = new Node(event->scenePos(),nodeId++);
+      Node* node = new Node(event->scenePos(),nodeId++);
       nodes.push_back(node);
       addItem(node);
     }
@@ -68,10 +65,8 @@ void graphics::mousePressEvent(QGraphicsSceneMouseEvent *event)
             {
               //start of edge draw
 
-              Edge *edge = new Edge(node,edgeId++);
-              edges.push_back(edge);
-              addItem(edge);
-              selectedEdge = edge;
+              selectedEdge = new Edge(node,edgeId++);
+              addItem(selectedEdge);
             }
         }
     }
@@ -139,6 +134,7 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
               if(!cond)
                 {
                   selectedEdge->setTo(node);
+                  edges.push_back(selectedEdge);
                   // add neighbors
                   node->addNeighbor({selectedEdge->getFrom(),selectedEdge});
                   selectedEdge->getFrom()->addNeighbor({node,selectedEdge});
@@ -151,8 +147,7 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
       if(selectedEdge != NULL)
         {
           removeItem(selectedEdge);
-          selectedEdge = NULL;
-          edges.pop_back();
+          delete selectedEdge;
         }
     }
 }
@@ -167,7 +162,6 @@ void graphics::removeNode(Node *node)
           std::vector<neighbor> n(std::move((*i)->getAdlist()));
           for (neighbor j : n)
             {
-              qDebug() << std::get<1>(j) << std::get<1>(j)->getId();
               removeEdge(std::get<1>(j));
 
             }
@@ -182,7 +176,6 @@ void graphics::removeEdge(Edge *edge)
 {
   for(auto i = edges.begin();i!= edges.end();++i)
     {
-      qDebug() << (*i)->getId() << edge->getId();
       if((*i)->getId() == edge->getId())
         {
           removeItem(*i);
@@ -205,7 +198,7 @@ QTextStream& operator << (QTextStream &data,graphics &g)
 
   // these contain the mappings between objects and their serialized ids
   data.setFieldWidth(10);
-  QMap<Node*,qreal> nodepmap;
+  QMap<Node*,int> nodepmap;
   QMap<Edge*,int> edgepmap;
   /*data looks like this:
   nodesize edgesize
@@ -223,7 +216,6 @@ QTextStream& operator << (QTextStream &data,graphics &g)
            << node->getLabel()
            << node->pos().x()
            << node->pos().y();
-      qDebug() << node->getId();
       for (neighbor n : node->getAdlist())
         {
           Node* first  = std::get<0>(n);

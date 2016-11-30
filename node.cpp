@@ -30,7 +30,7 @@ Node::Node(int id,QString label,QPointF pos)
 
 void Node::getNodeInfo() const
 {
-  qDebug() << "Node -> id=" << id << ", neighbors=" << adlist.size();
+  qDebug() << "Node -> id=" << id << ", neighbors=" << adlist;
 }
 
 QRectF Node::boundingRect() const

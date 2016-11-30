@@ -5,8 +5,8 @@
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 
-class Edge;
-class Node;
+#include "node.h"
+#include "edge.h"
 
 //we handle events here.
 class graphics : public QGraphicsScene
