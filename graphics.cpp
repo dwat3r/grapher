@@ -172,7 +172,8 @@ void graphics::removeNode(Node *node)
 
             }
           nodes.erase(i);
-          node->~Node();
+          node->removeFromNeighbors();
+          delete node;
           return;
         }
     }
@@ -186,7 +187,8 @@ void graphics::removeEdge(Edge *edge)
         {
           removeItem(*i);
           edges.erase(i);
-          edge->~Edge();
+          edge->removeFromNeighbors();
+          delete edge;
           return;
         }
     }

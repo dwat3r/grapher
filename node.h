@@ -17,7 +17,7 @@ public:
   Node(int id, QString label, QPointF pos);
   //destructor notifies neighbors
   // and destructs connected edges too
-  ~Node();
+
   QRectF boundingRect() const;
   bool contains(const QPointF &pos) const;
   void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
@@ -32,6 +32,7 @@ public:
   void setLabel(QString label) {label = label;}
   // removes neighbor
   void removeNeighbor(Node *node);
+  void removeFromNeighbors();
 private:
   int id;
   std::vector<neighbor> adlist;

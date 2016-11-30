@@ -56,7 +56,7 @@ void Edge::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
   painter->drawLine(start,end);
   //painter->drawText(boundingRect(),Qt::AlignCenter,QString("%1").arg(id));
 }
-Edge::~Edge()
+void Edge::removeFromNeighbors()
 {
   from->removeNeighbor(to);
   to->removeNeighbor(from);

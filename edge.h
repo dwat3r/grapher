@@ -11,8 +11,7 @@ class Edge : public QGraphicsLineItem
 public:
   Edge(Node* from,int id);
   Edge(int id,QString label,QPointF start,QPointF end);
-  // destructor calls notify
-  ~Edge();
+
   QRectF boundingRect() const;
   bool contains(const QPointF &pos) const;
   void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
@@ -28,6 +27,8 @@ public:
   void setStart(QPointF pos){start = pos;}
   void setTo(Node* node){end = node->pos();to = node;}
   void setFrom(Node* node){start = node->pos();from = node;}
+  //remove
+  void removeFromNeighbors();
 private:
   QString label;
   Node* from;

@@ -64,9 +64,11 @@ void Node::removeNeighbor(Node *node)
           n = adlist.erase(n);
           return;
         }
+      else
+        ++n;
     }
 }
-Node::~Node()
+void Node::removeFromNeighbors()
 {
   for(neighbor n : adlist)
     std::get<0>(n)->removeNeighbor(this);
