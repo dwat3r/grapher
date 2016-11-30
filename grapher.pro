@@ -28,5 +28,4 @@ FORMS    += mainwindow.ui
 
 win32 {
   CONFIG += c++11
-  INCLUDEPATH += C:\local\boost_1_62_0
 }

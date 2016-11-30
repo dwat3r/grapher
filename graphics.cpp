@@ -335,7 +335,7 @@ void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
           if(node->contains(event->scenePos()))
             {
               //graphModificationListener(node);
-              std::vector<neighbor> notifiableNeighbors(std::move(node->getAdlist()));
+              std::vector<neighbor> notifiableNeighbors(node->getAdlist());
               removeNode(node);
               massCheckMIS(notifiableNeighbors);
               return;
