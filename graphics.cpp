@@ -5,6 +5,7 @@
 #include <QTime>
 #include <QCoreApplication>
 #include <QEventLoop>
+#include <ctime>
 
 //Node
 Node::Node(QPointF pos)
