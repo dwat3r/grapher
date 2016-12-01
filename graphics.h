@@ -1,12 +1,12 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
+#include "node.h"
+#include "edge.h"
 #include <QtGui>
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 
-class Edge;
-class Node;
 
 //we handle events here.
 class graphics : public QGraphicsScene

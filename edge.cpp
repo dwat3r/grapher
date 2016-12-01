@@ -1,7 +1,5 @@
 #include "edge.h"
-#include "node.h"
 #include <cmath>
-
 
 Edge::Edge(Node* from,int id)
   : label("1")

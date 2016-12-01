@@ -1,10 +1,10 @@
 #ifndef EDGE_H
 #define EDGE_H
+
 #include "node.h"
 #include <QtGui>
 #include <QGraphicsLineItem>
 
-class Node;
 //this class represents undirected edges.
 class Edge : public QGraphicsLineItem
 {
