@@ -8,19 +8,21 @@ Edge::Edge(Node* from,int id)
   , start(from->pos())
   , end(from->pos())
   , id(id)
+  , weight(1)
 {
   setFlag(ItemSendsGeometryChanges);
   setCacheMode(DeviceCoordinateCache);
   setZValue(-1);
   setVisible(true);
 }
-Edge::Edge(int id,QString label,QPointF start,QPointF end)
+Edge::Edge(int id,int weight,QString label,QPointF start,QPointF end)
   : label(label)
   ,from(NULL)
   ,to(NULL)
   ,start(start)
   ,end(end)
   ,id(id)
+  ,weight(weight)
 {
   setFlag(ItemSendsGeometryChanges);
   setCacheMode(DeviceCoordinateCache);
@@ -52,7 +54,7 @@ void Edge::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
 {
   painter->setPen(Qt::black);
   painter->drawLine(start,end);
-  //painter->drawText(boundingRect(),Qt::AlignCenter,QString("%1").arg(id));
+  painter->drawText(boundingRect(),Qt::AlignCenter,QString("%1").arg(weight));
 }
 void Edge::removeFromNeighbors()
 {

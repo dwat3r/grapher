@@ -1,11 +1,13 @@
 #include "node.h"
 #include <QDebug>
 #include <ctime>
+#include <functional>
 
-Node::Node(QPointF pos,int id)
+Node::Node(QPointF pos,int id,bipartition bi)
   : QGraphicsEllipseItem()
   , id(id)
   , adlist()
+  , bi(bi)
 {
   setPos(pos);
   label = QString::number(id);
@@ -15,9 +17,10 @@ Node::Node(QPointF pos,int id)
   setRect(boundingRect());
   setVisible(true);
 }
-Node::Node(int id,QString label,QPointF pos)
+Node::Node(int id,bipartition bi,QString label,QPointF pos)
   : id(id)
   , label(label)
+  , bi(bi)
 {
   setPos(pos);
   setPen(pen());
@@ -30,7 +33,7 @@ Node::Node(int id,QString label,QPointF pos)
 
 void Node::getNodeInfo() const
 {
-  qDebug() << "Node -> id=" << id << ", neighbors=" << adlist;
+  qDebug() << "Node -> id=" << id << ", bi=" << bi;
 }
 
 QRectF Node::boundingRect() const
@@ -47,7 +50,11 @@ bool Node::contains(const QPointF &p) const
 }
 void Node::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
 {
-  painter->setPen(pen());
+  if(bi == V1)
+    painter->setPen(Qt::red);
+  else
+    painter->setPen(Qt::blue);
+
   painter->setBrush(Qt::white);
   painter->drawEllipse(boundingRect());
   painter->setPen(Qt::black);

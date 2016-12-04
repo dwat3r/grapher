@@ -32,7 +32,11 @@ void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
               return;
             }
         }
-      Node* node = new Node(event->scenePos(),nodeId++);
+      bipartition bi = V1;
+      if(QGuiApplication::keyboardModifiers() == Qt::ShiftModifier){
+          bi = V2;
+        }
+      Node* node = new Node(event->scenePos(),nodeId++,bi);
       nodes.push_back(node);
       addItem(node);
     }
@@ -111,9 +115,13 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
           if(node->contains(event->scenePos()))
             {
               //disallow parallel and loop edges
+              // and also disallow edges between same colour
               bool cond = false;
               //loop
               if (selectedEdge->getFrom() == node)
+                cond = true;
+              //same colour
+              if (selectedEdge->getFrom()->getBi() == node->getBi())
                 cond = true;
               //parallel
               else
@@ -121,7 +129,7 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
                   for (neighbor n : node->getAdlist())
                     {
                       if((std::get<1>(n)->getFrom() == selectedEdge->getFrom() &&
-                          std::get<1>(n)->getTo() == node)||
+                          std::get<1>(n)->getTo() == node) ||
                          (std::get<1>(n)->getFrom() == node &&
                           std::get<1>(n)->getTo() == selectedEdge->getFrom()))
                         {
@@ -202,7 +210,7 @@ QTextStream& operator << (QTextStream &data,graphics &g)
   /*data looks like this:
   nodesize edgesize
   (first nodes):
-  id label state incround.. x y [neighborNodeId neigborEdgeId]*
+  id label bi x y [neighborNodeId neigborEdgeId]*
   ###
   (then edges):
   id label startx starty endx endy fromId toId
@@ -213,6 +221,7 @@ QTextStream& operator << (QTextStream &data,graphics &g)
     {
       data << node->getId()
            << node->getLabel()
+           << node->getBi()
            << node->pos().x()
            << node->pos().y();
       for (neighbor n : node->getAdlist())
@@ -233,6 +242,7 @@ QTextStream& operator << (QTextStream &data,graphics &g)
   for (Edge* edge : g.edges)
     {
       data << edge->getId()
+           << edge->getWeight()
            << edge->getLabel()
            << edge->getStart().x()
            << edge->getStart().y()
@@ -266,13 +276,13 @@ QTextStream& operator >> (QTextStream &data,graphics &g)
 
   for(size_t i = nodesize;i > 0; --i)
     {
-      int id;
+      int id,bi;
       QString label;
       qreal x,y;
-      data >> id >> label >> x >> y;
+      data >> id >> label >> bi >> x >> y;
       data.readLine();
 
-      Node *node = new Node(id,label,QPointF(x,y));
+      Node *node = new Node(id,static_cast<bipartition>(bi),label,QPointF(x,y));
       g.nodes.push_back(node);
       g.addItem(node);
       nodepmap[id] = node;
@@ -280,13 +290,13 @@ QTextStream& operator >> (QTextStream &data,graphics &g)
   data.readLine();//ignore ###
   for(size_t i = edgesize;i > 0; --i)
     {
-      int id;
+      int id,weight;
       QString label;
       qreal x1,y1,x2,y2;
-      data >> id >> label >> x1 >> y1 >> x2 >> y2;
+      data >> id >> weight >> label >> x1 >> y1 >> x2 >> y2;
       data.readLine();
 
-      Edge *edge = new Edge(id,label,QPointF(x1,y1),QPointF(x2,y2));
+      Edge *edge = new Edge(id,weight,label,QPointF(x1,y1),QPointF(x2,y2));
       g.edges.push_back(edge);
       g.addItem(edge);
       edgepmap[id] = edge;

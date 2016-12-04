@@ -203,7 +203,6 @@
    </attribute>
    <addaction name="actionNode"/>
    <addaction name="actionEdge"/>
-   <addaction name="actionSetM"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QToolBar" name="toolBar">
@@ -216,6 +215,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionPlay"/>
   </widget>
   <action name="actionLoad">
    <property name="text">
@@ -275,14 +275,6 @@
    </property>
    <property name="text">
     <string>Pause</string>
-   </property>
-  </action>
-  <action name="actionSetM">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>setM</string>
    </property>
   </action>
  </widget>
