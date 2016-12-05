@@ -15,13 +15,15 @@ SOURCES += main.cpp\
         mainwindow.cpp \
         node.cpp \
         edge.cpp \
-        graphics.cpp
+        graphics.cpp \
+    graphicsview.cpp
 
 
 HEADERS  += mainwindow.h \
          node.h \
          edge.h \
-         graphics.h
+         graphics.h \
+    graphicsview.h
 
 FORMS    += mainwindow.ui
 

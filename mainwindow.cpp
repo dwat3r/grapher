@@ -8,9 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui(new Ui::MainWindow)
 {
   ui->setupUi(this);
-  scene = new graphics;
-  ui->graphicsView->setScene(scene);
-  ui->graphicsView->show();
+  graphics *scene = ui->graphicsView->getScene();
   // set mouse tracking in statusbar
   ui->graphicsView->viewport()->installEventFilter(this);
 

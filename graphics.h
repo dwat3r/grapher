@@ -6,6 +6,7 @@
 #include <QtGui>
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
+#include <QTimer>
 
 
 //we handle events here.
@@ -19,11 +20,15 @@ public:
   void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
   void mousePressEvent(QGraphicsSceneMouseEvent *event);
   void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-
+  //
+  void editValueEvent(QPointF pos,int value);
+  std::vector<Edge*> getEdges() const {return edges;}
   //(de)serialization
   friend QTextStream& operator << (QTextStream& data,graphics &g);
   friend QTextStream& operator >> (QTextStream& data,graphics &g);
-
+  //algorithms
+  void matching();
+  std::map<Node*,int> dijkstra(Node* source);
   //reset scene
   void cleanup();
   //deletions
@@ -40,6 +45,11 @@ private:
   enum drawmode{NodeDraw,EdgeDraw} drawmode;
   int nodeId;
   int edgeId;
+  //TODO: prevent the doubleclick + other events messing
+  QTimer timer;
+  bool doubleClicked;
+protected slots:
+  void timeout(){}
 };
 
 

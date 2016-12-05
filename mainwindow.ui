@@ -54,7 +54,7 @@
        <enum>QLayout::SetNoConstraint</enum>
       </property>
       <item>
-       <widget class="QGraphicsView" name="graphicsView">
+       <widget class="graphicsview" name="graphicsView">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -97,7 +97,7 @@
          <enum>QGraphicsView::AnchorUnderMouse</enum>
         </property>
         <property name="viewportUpdateMode">
-         <enum>QGraphicsView::FullViewportUpdate</enum>
+         <enum>QGraphicsView::SmartViewportUpdate</enum>
         </property>
        </widget>
       </item>
@@ -279,6 +279,13 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>graphicsview</class>
+   <extends>QGraphicsView</extends>
+   <header>graphicsview.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

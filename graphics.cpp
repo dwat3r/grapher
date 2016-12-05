@@ -1,9 +1,12 @@
 #include "graphics.h"
 #include <QTime>
 #include <QCoreApplication>
+#include <QApplication>
 #include <QEventLoop>
 #include <ctime>
-
+//for matching
+#include <deque>
+#include <algorithm>
 
 //graphics
 graphics::graphics()
@@ -17,6 +20,11 @@ graphics::graphics()
   , edgeId(0)
 {
   srand (static_cast <unsigned> (time(0)));
+  // timer for avoid messing with click events TODO
+  timer.setInterval(QApplication::doubleClickInterval() + 100);
+  timer.setSingleShot(true);
+  connect(&timer,SIGNAL(timeout()), this, SLOT(timeout()));
+  doubleClicked = false;
 }
 
 void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
@@ -55,21 +63,28 @@ void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 
 void graphics::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-  for(Node* node : nodes)
+  //select node to move
+  if(drawmode == NodeDraw)
     {
-      if(node->contains(event->scenePos()))
+      for(Node* node : nodes)
         {
-          if(drawmode == NodeDraw)
+          if(node->contains(event->scenePos()))
             {
-              //select node to move
               selectedNode = node;
+              break;
             }
-          else
+        }
+    }
+  //start of edge draw
+  else
+    {
+      for(Node* node : nodes)
+        {
+          if(node->contains(event->scenePos()))
             {
-              //start of edge draw
-
               selectedEdge = new Edge(node,edgeId++);
               addItem(selectedEdge);
+              break;
             }
         }
     }
@@ -121,7 +136,7 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
               if (selectedEdge->getFrom() == node)
                 cond = true;
               //same colour
-              if (selectedEdge->getFrom()->getBi() == node->getBi())
+              else if (selectedEdge->getFrom()->getBi() == node->getBi())
                 cond = true;
               //parallel
               else
@@ -158,6 +173,19 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         }
     }
 }
+void graphics::editValueEvent(QPointF pos,int value)
+{
+  for (Edge *edge : edges)
+    {
+      if(edge->contains(pos))
+        {
+          edge->setWeight(value);
+          edge->update();
+          return;
+        }
+    }
+}
+
 
 void graphics::removeNode(Node *node)
 {
@@ -328,4 +356,57 @@ QTextStream& operator >> (QTextStream &data,graphics &g)
       edgepmap[id]->setTo(nodepmap[tid]);
     }
   return data;
+}
+//matching algorithm
+//first dijkstra
+std::map<Node*,int> graphics::dijkstra(Node* source)
+{
+  std::map<Node*,int> dist;
+  std::map<Node*,Node*> prev;
+  std::deque<std::pair<Node*,int> > Q;
+  //init
+  for (Node* n : nodes)
+    {
+      dist[n] = 100000; //ez a vegtelen most
+      prev[n] = NULL;
+      Q.push_back({n,dist[n]});
+    }
+  dist[source] = 0;
+
+  while(!Q.empty())
+    {
+      //get minimal
+      auto pu = std::min_element(Q.begin(),Q.end(),
+                  [](std::pair<Node*,int> a,std::pair<Node*,int> b){
+                      return std::get<1>(a) < std::get<1>(b);});
+      Node *u = std::get<0>(*pu);
+      Q.erase(pu);
+
+      for (neighbor n : u->getAdlist())
+        {
+          int alt = dist[u] + std::get<1>(n)->getWeight();
+          if (alt < dist[std::get<0>(n)])
+            {
+              dist[std::get<0>(n)] = alt;
+              prev[std::get<0>(n)] = u;
+            }
+        }
+    }
+  return dist;
+}
+// then matching
+void graphics::matching()
+{
+  //reverse edge weights
+  Edge* pewmax = *std::max_element(edges.begin(),edges.end(),
+                [](Edge* a,Edge* b){return a->getWeight() < b->getWeight();});
+  int ewmax = pewmax->getWeight();
+
+  for (Edge* e : edges)
+      e->setWeight(ewmax - e->getWeight());
+
+  // create s and t
+  // and create directed edges
+
+  //
 }
