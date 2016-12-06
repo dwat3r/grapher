@@ -359,7 +359,8 @@ QTextStream& operator >> (QTextStream &data,graphics &g)
 }
 //matching algorithm
 //first dijkstra
-std::map<Node*,int> graphics::dijkstra(Node* source)
+// returns list of edges of the shortest path
+std::pair<std::map<Node*,int>,std::map<Node*,Node*> > graphics::dijkstra(Node *source,Node *dest)
 {
   std::map<Node*,int> dist;
   std::map<Node*,Node*> prev;
@@ -367,7 +368,7 @@ std::map<Node*,int> graphics::dijkstra(Node* source)
   //init
   for (Node* n : nodes)
     {
-      dist[n] = 100000; //ez a vegtelen most
+      dist[n] = 10000000; //ez a vegtelen most
       prev[n] = NULL;
       Q.push_back({n,dist[n]});
     }
@@ -380,6 +381,10 @@ std::map<Node*,int> graphics::dijkstra(Node* source)
                   [](std::pair<Node*,int> a,std::pair<Node*,int> b){
                       return std::get<1>(a) < std::get<1>(b);});
       Node *u = std::get<0>(*pu);
+      //terminate search if we reached dest
+      if(u == dest)
+        break;
+
       Q.erase(pu);
 
       for (neighbor n : u->getAdlist())
@@ -392,7 +397,7 @@ std::map<Node*,int> graphics::dijkstra(Node* source)
             }
         }
     }
-  return dist;
+  return {dist,prev};
 }
 // then matching
 void graphics::matching()
@@ -406,7 +411,23 @@ void graphics::matching()
       e->setWeight(ewmax - e->getWeight());
 
   // create s and t
-  // and create directed edges
+  // create empty M
+  // create pi for nodes
+  // create w for edges
 
-  //
+  //main loop
+  // create directed edges from s to nonM vertices of V1
+
+  // create directed edges from nonM vertices of V2 to t
+
+  // direct edges between V1 & V2 according to M
+  // and reverse value if in M
+
+  // perform Dijkstra between s & t
+
+  // adjust M
+  // adjust pi
+  // adjust w
+
+  // if all nodes are in M, break;
 }
