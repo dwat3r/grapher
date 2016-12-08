@@ -54,8 +54,10 @@ void Node::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
 {
   if(bi == V1)
     painter->setPen(Qt::red);
-  else
+  else if (bi == V2)
     painter->setPen(Qt::blue);
+  else
+    painter->setPen(Qt::green);
 
   painter->setBrush(Qt::white);
   painter->drawEllipse(boundingRect());

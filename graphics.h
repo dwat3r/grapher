@@ -27,9 +27,8 @@ public:
   friend QTextStream& operator << (QTextStream& data,graphics &g);
   friend QTextStream& operator >> (QTextStream& data,graphics &g);
   //matching related functions
-  void matching();
   std::map<Node*,std::pair<int,Node*> > dijkstra(Node *source,Node *dest);
-  void drawST(Node* s,Node* t);
+  void drawST(Node *&s,Node *&t);
   void directEdges();
   //reset scene
   void cleanup();
@@ -39,6 +38,7 @@ public:
 public slots:
   void setNodeDrawMode(){drawmode = NodeDraw;}
   void setEdgeDrawMode(){drawmode = EdgeDraw;}
+  void matching();
 private:
   std::vector<Node*> nodes;
   std::vector<Edge*> edges;

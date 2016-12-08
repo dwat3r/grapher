@@ -395,13 +395,16 @@ void graphics::matching()
       else
         //for s and t
         pi[node] = 0;
+      node->setLabel(QString("%1").arg(pi[node]));
     }
   // create w for edges
   std::map<Edge*,int> w;
   // init w
   for (Edge* e : edges)
-    w[e] = pi[e->getFrom()] + e->getWeight() - pi[e->getTo()];
-
+    {
+      w[e] = pi[e->getFrom()] + e->getWeight() - pi[e->getTo()];
+      e->setLabel(QString("%1").arg(w[e]));
+    }
   //main loop
   while(true)
     {
@@ -453,16 +456,21 @@ void graphics::matching()
         }
       // adjust pi
       for(Node* n : nodes)
+        {
           pi[n] += dp[n].first;
+          n->setLabel(QString("%1").arg(pi[n]));
+        }
       // adjust w
       for(Edge* e : edges)
-        w[e] += pi[e->getFrom()] - pi[e->getTo()];
-
+      {
+          w[e] += pi[e->getFrom()] - pi[e->getTo()];
+          e->setLabel(QString("%1").arg(w[e]));
+      }
       //cleanup
       for (neighbor n : s->getNeighbors())
-        n.first->removeNeighbor(s);
+          removeEdge(n.second);
       for (neighbor n : t->getNeighbors())
-        t->removeNeighbor(n.first);
+          removeEdge(n.second);
 
       // if all nodes are in M, break;
       bool cond = true;
@@ -473,6 +481,12 @@ void graphics::matching()
         }
       if (cond)
         break;
+      else
+        {
+          QTime dieTime= QTime::currentTime().addMSecs(300);
+          while (QTime::currentTime() < dieTime)
+          QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        }
     }
 }
 //dijkstra
@@ -517,7 +531,7 @@ std::map<Node*,std::pair<int,Node*> > graphics::dijkstra(Node *source,Node *dest
   return dp;
 }
 // draws s and t nodes, based on the position of the existing ones
-void graphics::drawST(Node* s,Node* t)
+void graphics::drawST(Node *&s,Node *&t)
 {
 
   // assume we're drawing bipartites the traditional way

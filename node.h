@@ -27,7 +27,7 @@ public:
 
   //getters
   int getId() const {return id;}
-  std::set<neighbor>& getNeighbors() {return adlist;}
+  std::set<neighbor> getNeighbors() {return adlist;}
   QString getLabel() const {return label;}
   bipartition getBi() const {return bi;}
   bool isInM() const {return inM;}

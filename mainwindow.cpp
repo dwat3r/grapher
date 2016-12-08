@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent) :
   // connect buttons to draw modes
   connect(ui->actionNode,&QAction::triggered,scene,&graphics::setNodeDrawMode);
   connect(ui->actionEdge,&QAction::triggered,scene,&graphics::setEdgeDrawMode);
+  connect(ui->actionPlay,&QAction::triggered,scene,&graphics::matching);
   // connect menu buttons
   connect(ui->actionLoad,&QAction::triggered,this,&MainWindow::load);
   connect(ui->actionSave,&QAction::triggered,this,&MainWindow::save);

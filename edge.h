@@ -31,6 +31,7 @@ public:
   void setStart(QPointF pos){start = pos;}
   void setTo(Node* node){end = node->pos();to = node;}
   void setFrom(Node* node){start = node->pos();from = node;}
+  void setLabel(QString l){label = l;}
   void setWeight(int nw){weight = nw;}
   void setDirected(bool b){directed = b;}
   void setInM(bool b){inM = b;}

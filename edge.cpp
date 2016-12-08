@@ -1,6 +1,8 @@
 #include "edge.h"
 #include <cmath>
 
+const qreal Pi = 3.14;
+
 Edge::Edge(Node* from,int id)
   : label("1")
   , from(from)
@@ -47,8 +49,11 @@ void Edge::init()
 QRectF Edge::boundingRect() const
 {
   //min(x0, x1), min(y0, y1), abs(x1-x0), abs(y1-y0)
+  qreal extra = 10;
   return QRectF(std::min(start.x(),end.x()),std::min(start.y(),end.y()),
-                std::abs(end.x()-start.x()),std::abs(end.y()-start.y()));
+                std::abs(end.x()-start.x()),std::abs(end.y()-start.y()))
+      .normalized()
+      .adjusted(-extra,-extra,extra,extra);
 }
 //from stackoverflow:
 //http://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
@@ -67,11 +72,26 @@ bool Edge::contains(const QPointF &pos) const
 
 void Edge::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
 {
-  painter->setPen(Qt::black);
+  if (inM)
+    painter->setPen(Qt::red);
+  else
+    painter->setPen(Qt::black);
+
   painter->drawLine(start,end);
   if (directed)
     {
-      //TODO
+      qreal arrowSize = 20;
+      double angle = ::acos(line().dx() / line().length());
+      if (line().dy() >= 0)
+          angle = (Pi * 2) - angle;
+
+      QPointF arrowP1 = line().p1() + QPointF(sin(angle + Pi / 3) * arrowSize,
+                                      cos(angle + Pi / 3) * arrowSize);
+      QPointF arrowP2 = line().p1() + QPointF(sin(angle + Pi - Pi / 3) * arrowSize,
+                                      cos(angle + Pi - Pi / 3) * arrowSize);
+      QPolygonF arrowHead;
+      arrowHead << line().p1() << arrowP1 << arrowP2;
+      painter->drawPolygon(arrowHead);
     }
   painter->drawText(boundingRect(),Qt::AlignCenter,QString("%1").arg(weight));
 }
