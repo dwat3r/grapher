@@ -26,9 +26,11 @@ public:
   //(de)serialization
   friend QTextStream& operator << (QTextStream& data,graphics &g);
   friend QTextStream& operator >> (QTextStream& data,graphics &g);
-  //algorithms
+  //matching related functions
   void matching();
   std::pair<std::map<Node*,int>,std::map<Node*,Node*> > dijkstra(Node *source,Node *dest);
+  void drawST(Node* s,Node* t);
+  void directEdges();
   //reset scene
   void cleanup();
   //deletions

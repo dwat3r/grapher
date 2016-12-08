@@ -8,6 +8,7 @@ Node::Node(QPointF pos,int id,bipartition bi)
   , id(id)
   , adlist()
   , bi(bi)
+  , inM()
 {
   setPos(pos);
   label = QString::number(id);
@@ -17,10 +18,11 @@ Node::Node(QPointF pos,int id,bipartition bi)
   setRect(boundingRect());
   setVisible(true);
 }
-Node::Node(int id,bipartition bi,QString label,QPointF pos)
+Node::Node(int id,bipartition bi,bool inM,QString label,QPointF pos)
   : id(id)
   , label(label)
   , bi(bi)
+  , inM(inM)
 {
   setPos(pos);
   setPen(pen());

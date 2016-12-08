@@ -29,6 +29,7 @@ graphics::graphics()
 
 void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
+  qDebug() << "in doubleclickEvent";
   if(drawmode == NodeDraw)
     {
       //if we doubleclicked on an item, delete it
@@ -63,6 +64,7 @@ void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 
 void graphics::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
+  qDebug() << "in pressEvent";
   //select node to move
   if(drawmode == NodeDraw)
     {
@@ -92,7 +94,6 @@ void graphics::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void graphics::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-
   if(drawmode == NodeDraw && selectedNode != NULL)
     {
       // node movement
@@ -117,6 +118,7 @@ void graphics::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
+  qDebug() << "in releaseEvent";
   if(drawmode == NodeDraw && selectedNode != NULL)
     {
       // stop moving node
@@ -168,8 +170,10 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         }
       if(selectedEdge != NULL)
         {
+          qDebug() << (*selectedEdge).getId();
           removeItem(selectedEdge);
           delete selectedEdge;
+          selectedEdge = NULL;
         }
     }
 }
@@ -213,6 +217,7 @@ void graphics::removeEdge(Edge *edge)
     {
       if((*i)->getId() == edge->getId())
         {
+          qDebug() << "removing:" << *i << (*i)->getId();
           removeItem(*i);
           edges.erase(i);
           edge->removeFromNeighbors();
@@ -250,6 +255,7 @@ QTextStream& operator << (QTextStream &data,graphics &g)
       data << node->getId()
            << node->getLabel()
            << node->getBi()
+           << node->getInM()
            << node->pos().x()
            << node->pos().y();
       for (neighbor n : node->getAdlist())
@@ -307,10 +313,11 @@ QTextStream& operator >> (QTextStream &data,graphics &g)
       int id,bi;
       QString label;
       qreal x,y;
-      data >> id >> label >> bi >> x >> y;
+      int inM;
+      data >> id >> label >> bi >> inM >> x >> y;
       data.readLine();
 
-      Node *node = new Node(id,static_cast<bipartition>(bi),label,QPointF(x,y));
+      Node *node = new Node(id,static_cast<bipartition>(bi),inM,label,QPointF(x,y));
       g.nodes.push_back(node);
       g.addItem(node);
       nodepmap[id] = node;
@@ -358,7 +365,69 @@ QTextStream& operator >> (QTextStream &data,graphics &g)
   return data;
 }
 //matching algorithm
-//first dijkstra
+void graphics::matching()
+{
+  //reverse edge weights
+  Edge* pewmax = *std::max_element(edges.begin(),edges.end(),
+                [](Edge* a,Edge* b){return a->getWeight() < b->getWeight();});
+  int ewmax = pewmax->getWeight();
+
+  for (Edge* e : edges)
+      e->setWeight(ewmax - e->getWeight());
+
+  // create s and t
+  Node *s = NULL;
+  Node *t = NULL;
+  drawST(s,t);
+  // create empty M
+  std::vector<Edge*> M;
+  // create pi for nodes
+  std::map<Node*,int> pi;
+  // create w for edges
+  std::map<Edge*,int> w;
+  //main loop
+  while(true)
+    {
+      for (Node* node : nodes)
+        {
+          // create directed edges from s to nonM vertices of V1
+          if(node->getBi() == V1 && !node->getInM())
+            {
+              Edge* e = new Edge(edgeId++,0,s,node);
+              edges.push_back(e);
+              addItem(e);
+            }
+          // create directed edges from nonM vertices of V2 to t
+          else if(node->getBi() == V2 && !node->getInM())
+            {
+              Edge* e = new Edge(edgeId++,0,node,t);
+              edges.push_back(e);
+              addItem(e);
+            }
+        }
+
+      // direct edges between V1 & V2 according to M
+      // and reverse value if in M
+      directEdges();
+
+      // perform Dijkstra between s & t
+      dijkstra(s,t);
+      // adjust M
+      // adjust pi
+      // adjust w
+
+      // if all nodes are in M, break;
+      bool cond = true;
+      for (Node *node : nodes)
+        {
+          if(!node->getInM())
+            cond = false;
+        }
+      if (cond)
+        break;
+    }
+}
+//dijkstra
 // returns list of edges of the shortest path
 std::pair<std::map<Node*,int>,std::map<Node*,Node*> > graphics::dijkstra(Node *source,Node *dest)
 {
@@ -399,35 +468,52 @@ std::pair<std::map<Node*,int>,std::map<Node*,Node*> > graphics::dijkstra(Node *s
     }
   return {dist,prev};
 }
-// then matching
-void graphics::matching()
+// draws s and t nodes, based on the position of the existing ones
+void graphics::drawST(Node* s,Node* t)
 {
-  //reverse edge weights
-  Edge* pewmax = *std::max_element(edges.begin(),edges.end(),
-                [](Edge* a,Edge* b){return a->getWeight() < b->getWeight();});
-  int ewmax = pewmax->getWeight();
 
-  for (Edge* e : edges)
-      e->setWeight(ewmax - e->getWeight());
+  // assume we're drawing bipartites the traditional way
+  // create nodes beside the graph
+  QPointF spos,tpos;
+  qreal stop = 0,sbot = 0;
+  qreal ttop = 0,tbot = 0;
+  for (Node* node : nodes)
+    {
+      if (node->getBi() == V1)
+        {
+          if (node->x() < spos.x())
+            spos.setX(node->x());
+          if (node->y() > stop)
+            stop = node->y();
+          else if (node->y() < sbot)
+            sbot = node->y();
+        }
+      else if (node->getBi() == V2)
+        {
+          if (node->x() > tpos.x())
+            tpos.setX(node->x());
+          if (node->y() > ttop)
+            ttop = node->y();
+          else if (node->y() < tbot)
+            tbot = node->y();
+        }
+    }
+  // doing pitagoras
+  spos.setX(spos.x() - std::sqrt(std::pow(stop - sbot,2) -
+                                 std::pow((stop - sbot) / 2,2)));
+  spos.setY((stop - sbot) / 2);
 
-  // create s and t
-  // create empty M
-  // create pi for nodes
-  // create w for edges
-
-  //main loop
-  // create directed edges from s to nonM vertices of V1
-
-  // create directed edges from nonM vertices of V2 to t
-
-  // direct edges between V1 & V2 according to M
-  // and reverse value if in M
-
-  // perform Dijkstra between s & t
-
-  // adjust M
-  // adjust pi
-  // adjust w
-
-  // if all nodes are in M, break;
+  tpos.setX(tpos.x() + std::sqrt(std::pow(ttop - tbot,2) -
+                                 std::pow((ttop - tbot) / 2,2)));
+  tpos.setY((ttop - tbot) / 2);
+  s = new Node(spos,nodeId++,Neither);
+  t = new Node(tpos,nodeId++,Neither);
+  nodes.push_back(s);
+  nodes.push_back(t);
+  addItem(s);
+  addItem(t);
+}
+void graphics::directEdges()
+{
+  //todo
 }

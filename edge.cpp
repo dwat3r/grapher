@@ -9,11 +9,9 @@ Edge::Edge(Node* from,int id)
   , end(from->pos())
   , id(id)
   , weight(1)
+  , directed(0)
 {
-  setFlag(ItemSendsGeometryChanges);
-  setCacheMode(DeviceCoordinateCache);
-  setZValue(-1);
-  setVisible(true);
+  init();
 }
 Edge::Edge(int id,int weight,QString label,QPointF start,QPointF end)
   : label(label)
@@ -23,12 +21,29 @@ Edge::Edge(int id,int weight,QString label,QPointF start,QPointF end)
   ,end(end)
   ,id(id)
   ,weight(weight)
+  ,directed(0)
+{
+  init();
+}
+Edge::Edge(int id,int weight,Node* from,Node* to)
+  : from(from)
+  , to(to)
+  , start(from->pos())
+  , end(to->pos())
+  , id(id)
+  , weight(weight)
+  , directed(1)
+{
+  init();
+}
+void Edge::init()
 {
   setFlag(ItemSendsGeometryChanges);
   setCacheMode(DeviceCoordinateCache);
   setZValue(-1);
   setVisible(true);
 }
+
 QRectF Edge::boundingRect() const
 {
   //min(x0, x1), min(y0, y1), abs(x1-x0), abs(y1-y0)
@@ -54,6 +69,10 @@ void Edge::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
 {
   painter->setPen(Qt::black);
   painter->drawLine(start,end);
+  if (directed)
+    {
+      //TODO draw an arrow
+    }
   painter->drawText(boundingRect(),Qt::AlignCenter,QString("%1").arg(weight));
 }
 void Edge::removeFromNeighbors()
