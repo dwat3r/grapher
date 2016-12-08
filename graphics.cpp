@@ -29,7 +29,6 @@ graphics::graphics()
 
 void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
-  qDebug() << "in doubleclickEvent";
   if(drawmode == NodeDraw)
     {
       //if we doubleclicked on an item, delete it
@@ -64,7 +63,6 @@ void graphics::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 
 void graphics::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-  qDebug() << "in pressEvent";
   //select node to move
   if(drawmode == NodeDraw)
     {
@@ -118,7 +116,6 @@ void graphics::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-  qDebug() << "in releaseEvent";
   if(drawmode == NodeDraw && selectedNode != NULL)
     {
       // stop moving node
@@ -145,10 +142,10 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
                 {
                   for (neighbor n : node->getAdlist())
                     {
-                      if((std::get<1>(n)->getFrom() == selectedEdge->getFrom() &&
-                          std::get<1>(n)->getTo() == node) ||
-                         (std::get<1>(n)->getFrom() == node &&
-                          std::get<1>(n)->getTo() == selectedEdge->getFrom()))
+                      if((n.second->getFrom() == selectedEdge->getFrom() &&
+                          n.second->getTo() == node) ||
+                         (n.second->getFrom() == node &&
+                          n.second->getTo() == selectedEdge->getFrom()))
                         {
                           cond = true;
                           break;
@@ -170,7 +167,6 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         }
       if(selectedEdge != NULL)
         {
-          qDebug() << (*selectedEdge).getId();
           removeItem(selectedEdge);
           delete selectedEdge;
           selectedEdge = NULL;
@@ -201,7 +197,7 @@ void graphics::removeNode(Node *node)
           std::vector<neighbor> n(std::move((*i)->getAdlist()));
           for (neighbor j : n)
             {
-              removeEdge(std::get<1>(j));
+              removeEdge(j.second);
 
             }
           nodes.erase(i);
@@ -217,7 +213,6 @@ void graphics::removeEdge(Edge *edge)
     {
       if((*i)->getId() == edge->getId())
         {
-          qDebug() << "removing:" << *i << (*i)->getId();
           removeItem(*i);
           edges.erase(i);
           edge->removeFromNeighbors();
@@ -260,8 +255,8 @@ QTextStream& operator << (QTextStream &data,graphics &g)
            << node->pos().y();
       for (neighbor n : node->getAdlist())
         {
-          Node* first  = std::get<0>(n);
-          Edge* second = std::get<1>(n);
+          Node* first  = n.first;
+          Edge* second = n.second;
           if(!(nodepmap.contains(first)))
             nodepmap[first] = first->getId();
           if(!(edgepmap.contains(second)))
@@ -411,8 +406,9 @@ void graphics::matching()
       directEdges();
 
       // perform Dijkstra between s & t
-      dijkstra(s,t);
+      std::map<Node*,Node*> path = dijkstra(s,t);
       // adjust M
+      for(auto& n : path){}
       // adjust pi
       // adjust w
 
@@ -429,7 +425,7 @@ void graphics::matching()
 }
 //dijkstra
 // returns list of edges of the shortest path
-std::pair<std::map<Node*,int>,std::map<Node*,Node*> > graphics::dijkstra(Node *source,Node *dest)
+std::map<Node*,Node*> graphics::dijkstra(Node *source,Node *dest)
 {
   std::map<Node*,int> dist;
   std::map<Node*,Node*> prev;
@@ -448,8 +444,8 @@ std::pair<std::map<Node*,int>,std::map<Node*,Node*> > graphics::dijkstra(Node *s
       //get minimal
       auto pu = std::min_element(Q.begin(),Q.end(),
                   [](std::pair<Node*,int> a,std::pair<Node*,int> b){
-                      return std::get<1>(a) < std::get<1>(b);});
-      Node *u = std::get<0>(*pu);
+                      return a.second < b.second;});
+      Node *u = pu->first;
       //terminate search if we reached dest
       if(u == dest)
         break;
@@ -458,15 +454,15 @@ std::pair<std::map<Node*,int>,std::map<Node*,Node*> > graphics::dijkstra(Node *s
 
       for (neighbor n : u->getAdlist())
         {
-          int alt = dist[u] + std::get<1>(n)->getWeight();
-          if (alt < dist[std::get<0>(n)])
+          int alt = dist[u] + n.second->getWeight();
+          if (alt < dist[n.first])
             {
-              dist[std::get<0>(n)] = alt;
-              prev[std::get<0>(n)] = u;
+              dist[n.first] = alt;
+              prev[n.first] = u;
             }
         }
     }
-  return {dist,prev};
+  return prev;
 }
 // draws s and t nodes, based on the position of the existing ones
 void graphics::drawST(Node* s,Node* t)

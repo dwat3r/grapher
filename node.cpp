@@ -68,7 +68,7 @@ void Node::removeNeighbor(Node *node)
 {
   for (auto n = adlist.begin();n != adlist.end();)
     {
-      if(std::get<0>(*n) == node)
+      if(n->first == node)
         {
           n = adlist.erase(n);
           return;
@@ -80,5 +80,5 @@ void Node::removeNeighbor(Node *node)
 void Node::removeFromNeighbors()
 {
   for(neighbor n : adlist)
-    std::get<0>(n)->removeNeighbor(this);
+    n.first->removeNeighbor(this);
 }
