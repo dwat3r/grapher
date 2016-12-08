@@ -25,6 +25,7 @@ public:
   int getId() const {return id;}
   int getWeight() const {return weight;}
   bool isDirected() const {return directed;}
+  bool isInM() const {return inM;}
   //setters
   void setEnd(QPointF pos){end = pos;}
   void setStart(QPointF pos){start = pos;}
@@ -32,6 +33,7 @@ public:
   void setFrom(Node* node){start = node->pos();from = node;}
   void setWeight(int nw){weight = nw;}
   void setDirected(bool b){directed = b;}
+  void setInM(bool b){inM = b;}
   //remove
   void removeFromNeighbors();
 private:
@@ -47,5 +49,7 @@ private:
   //draw tiny arrows on the edges pointy end
   //or not
   bool directed;
+  //inM
+  bool inM;
 };
 #endif // EDGE_H

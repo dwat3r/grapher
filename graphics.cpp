@@ -6,6 +6,7 @@
 #include <ctime>
 //for matching
 #include <deque>
+#include <set>
 #include <algorithm>
 
 //graphics
@@ -375,7 +376,7 @@ void graphics::matching()
   Node *t = NULL;
   drawST(s,t);
   // create empty M
-  std::vector<Edge*> M;
+  // M included in edge
   // create pi for nodes
   std::map<Node*,int> pi;
   // create w for edges
@@ -406,9 +407,27 @@ void graphics::matching()
       directEdges();
 
       // perform Dijkstra between s & t
-      std::map<Node*,Node*> path = dijkstra(s,t);
+      std::map<Node*,std::pair<int,Node*> > dp = dijkstra(s,t);
+      // fill P
+      std::set<Edge*> P;
+      for(auto& i : dp)
+        {
+          for(Edge* e : edges)
+            {
+              if(i.first == e->getFrom() && i.second.second == e->getTo())
+                P.insert(e);
+            }
+        }
       // adjust M
-      for(auto& n : path){}
+      for(Edge* e : P)
+        {
+          // insert or delete edge on shortest path
+          // according to M
+          if(e->isInM())
+            e->setInM(false);
+          else
+            e->setInM(true)
+        }
       // adjust pi
       // adjust w
 
@@ -425,19 +444,19 @@ void graphics::matching()
 }
 //dijkstra
 // returns list of edges of the shortest path
-std::map<Node*,Node*> graphics::dijkstra(Node *source,Node *dest)
+std::map<Node*,std::pair<int,Node*> > graphics::dijkstra(Node *source,Node *dest)
 {
-  std::map<Node*,int> dist;
-  std::map<Node*,Node*> prev;
+  // dist-prev structure holds result
+  std::map<Node*,std::pair<int,Node*> > dp;
   std::deque<std::pair<Node*,int> > Q;
   //init
   for (Node* n : nodes)
     {
-      dist[n] = 10000000; //ez a vegtelen most
-      prev[n] = NULL;
-      Q.push_back({n,dist[n]});
+      dp[n].first = 10000000; //ez a vegtelen most
+      dp[n].second = NULL;
+      Q.push_back({n,dp[n].first});
     }
-  dist[source] = 0;
+  dp[source].first = 0;
 
   while(!Q.empty())
     {
@@ -454,15 +473,15 @@ std::map<Node*,Node*> graphics::dijkstra(Node *source,Node *dest)
 
       for (neighbor n : u->getAdlist())
         {
-          int alt = dist[u] + n.second->getWeight();
-          if (alt < dist[n.first])
+          int alt = dp[u].first + n.second->getWeight();
+          if (alt < dp[n.first].first)
             {
-              dist[n.first] = alt;
-              prev[n.first] = u;
+              dp[n.first].first = alt;
+              dp[n.first].second = u;
             }
         }
     }
-  return prev;
+  return dp;
 }
 // draws s and t nodes, based on the position of the existing ones
 void graphics::drawST(Node* s,Node* t)

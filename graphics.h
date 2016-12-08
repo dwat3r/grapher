@@ -28,7 +28,7 @@ public:
   friend QTextStream& operator >> (QTextStream& data,graphics &g);
   //matching related functions
   void matching();
-  std::map<Node*,Node*> dijkstra(Node *source,Node *dest);
+  std::map<Node*,std::pair<int,Node*> > dijkstra(Node *source,Node *dest);
   void drawST(Node* s,Node* t);
   void directEdges();
   //reset scene
