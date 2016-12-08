@@ -71,7 +71,7 @@ void Edge::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
   painter->drawLine(start,end);
   if (directed)
     {
-      //TODO draw an arrow
+      //TODO
     }
   painter->drawText(boundingRect(),Qt::AlignCenter,QString("%1").arg(weight));
 }

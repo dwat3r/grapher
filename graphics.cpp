@@ -141,7 +141,7 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
               //parallel
               else
                 {
-                  for (neighbor n : node->getAdlist())
+                  for (neighbor n : node->getNeighbors())
                     {
                       if((n.second->getFrom() == selectedEdge->getFrom() &&
                           n.second->getTo() == node) ||
@@ -195,7 +195,7 @@ void graphics::removeNode(Node *node)
       if(*i == node)
         {
           removeItem(*i);
-          std::vector<neighbor> n(std::move((*i)->getAdlist()));
+          std::set<neighbor> n(std::move((*i)->getNeighbors()));
           for (neighbor j : n)
             {
               removeEdge(j.second);
@@ -251,10 +251,10 @@ QTextStream& operator << (QTextStream &data,graphics &g)
       data << node->getId()
            << node->getLabel()
            << node->getBi()
-           << node->getInM()
+           << node->isInM()
            << node->pos().x()
            << node->pos().y();
-      for (neighbor n : node->getAdlist())
+      for (neighbor n : node->getNeighbors())
         {
           Node* first  = n.first;
           Edge* second = n.second;
@@ -369,8 +369,9 @@ void graphics::matching()
   int ewmax = pewmax->getWeight();
 
   for (Edge* e : edges)
-      e->setWeight(ewmax - e->getWeight());
-
+    e->setWeight(ewmax - e->getWeight());
+  for (Edge* e : edges)
+    e->setDirected(true);
   // create s and t
   Node *s = NULL;
   Node *t = NULL;
@@ -379,24 +380,46 @@ void graphics::matching()
   // M included in edge
   // create pi for nodes
   std::map<Node*,int> pi;
+  // init pi
+  for (Node* node : nodes)
+    {
+      if (node->getBi() == V1)
+        pi[node] = 0;
+      else if (node->getBi() == V2)
+        {
+          pi[node] = INT32_MAX; //positive infinity
+          for (neighbor n : node->getNeighbors())
+            if (n.second->getWeight() < pi[node])
+              pi[node] = n.second->getWeight();
+        }
+      else
+        //for s and t
+        pi[node] = 0;
+    }
   // create w for edges
   std::map<Edge*,int> w;
+  // init w
+  for (Edge* e : edges)
+    w[e] = pi[e->getFrom()] + e->getWeight() - pi[e->getTo()];
+
   //main loop
   while(true)
     {
       for (Node* node : nodes)
         {
           // create directed edges from s to nonM vertices of V1
-          if(node->getBi() == V1 && !node->getInM())
+          if(node->getBi() == V1 && !node->isInM())
             {
               Edge* e = new Edge(edgeId++,0,s,node);
+              s->addNeighbor({node,e});
               edges.push_back(e);
               addItem(e);
             }
           // create directed edges from nonM vertices of V2 to t
-          else if(node->getBi() == V2 && !node->getInM())
+          else if(node->getBi() == V2 && !node->isInM())
             {
               Edge* e = new Edge(edgeId++,0,node,t);
+              node->addNeighbor({t,e});
               edges.push_back(e);
               addItem(e);
             }
@@ -426,16 +449,26 @@ void graphics::matching()
           if(e->isInM())
             e->setInM(false);
           else
-            e->setInM(true)
+            e->setInM(true);
         }
       // adjust pi
+      for(Node* n : nodes)
+          pi[n] += dp[n].first;
       // adjust w
+      for(Edge* e : edges)
+        w[e] += pi[e->getFrom()] - pi[e->getTo()];
+
+      //cleanup
+      for (neighbor n : s->getNeighbors())
+        n.first->removeNeighbor(s);
+      for (neighbor n : t->getNeighbors())
+        t->removeNeighbor(n.first);
 
       // if all nodes are in M, break;
       bool cond = true;
       for (Node *node : nodes)
         {
-          if(!node->getInM())
+          if(!node->isInM() && node->getBi() != Neither)
             cond = false;
         }
       if (cond)
@@ -452,7 +485,7 @@ std::map<Node*,std::pair<int,Node*> > graphics::dijkstra(Node *source,Node *dest
   //init
   for (Node* n : nodes)
     {
-      dp[n].first = 10000000; //ez a vegtelen most
+      dp[n].first = INT32_MAX; //ez a vegtelen most
       dp[n].second = NULL;
       Q.push_back({n,dp[n].first});
     }
@@ -471,7 +504,7 @@ std::map<Node*,std::pair<int,Node*> > graphics::dijkstra(Node *source,Node *dest
 
       Q.erase(pu);
 
-      for (neighbor n : u->getAdlist())
+      for (neighbor n : u->getNeighbors())
         {
           int alt = dp[u].first + n.second->getWeight();
           if (alt < dp[n.first].first)
@@ -528,7 +561,31 @@ void graphics::drawST(Node* s,Node* t)
   addItem(s);
   addItem(t);
 }
+// direct edges between V1 & V2 according to M
+// and reverse value if in M
 void graphics::directEdges()
 {
-  //todo
+  for(Edge* e : edges)
+    {
+      // set neighborship
+      if (e->getFrom()->isInM() && e->getTo()->isInM() &&
+          e->getFrom()->getBi() == V1)
+        {
+          // swap!
+          Node* n = e->getFrom();
+          e->setFrom(e->getTo());
+          e->setTo(n);
+        }
+      else if (e->getFrom()->getBi() == V2)
+        {
+          //swap!
+          Node* n = e->getFrom();
+          e->setFrom(e->getTo());
+          e->setTo(n);
+        }
+      if (!(e->getFrom()->getBi() == Neither) &&
+          !(e->getTo()->getBi() == Neither))
+        e->getTo()->removeNeighbor(e->getFrom());
+    }
+  update();
 }
