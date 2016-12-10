@@ -195,7 +195,7 @@ void graphics::removeNode(Node *node)
       if(*i == node)
         {
           removeItem(*i);
-          std::set<neighbor> n(std::move((*i)->getNeighbors()));
+          std::set<neighbor> n((*i)->getNeighbors());
           for (neighbor j : n)
             {
               removeEdge(j.second);
@@ -396,6 +396,7 @@ void graphics::matching()
         //for s and t
         pi[node] = 0;
       node->setLabel(QString("%1").arg(pi[node]));
+      node->update();
     }
   // create w for edges
   std::map<Edge*,int> w;
@@ -414,6 +415,7 @@ void graphics::matching()
           if(node->getBi() == V1 && !node->isInM())
             {
               Edge* e = new Edge(edgeId++,0,s,node);
+              w[e] = 0;
               s->addNeighbor({node,e});
               edges.push_back(e);
               addItem(e);
@@ -422,6 +424,7 @@ void graphics::matching()
           else if(node->getBi() == V2 && !node->isInM())
             {
               Edge* e = new Edge(edgeId++,0,node,t);
+              w[e] = 0;
               node->addNeighbor({t,e});
               edges.push_back(e);
               addItem(e);
@@ -433,7 +436,7 @@ void graphics::matching()
       directEdges();
 
       // perform Dijkstra between s & t
-      std::map<Node*,std::pair<int,Node*> > dp = dijkstra(s,t);
+      std::map<Node*,std::pair<int,Node*> > dp = dijkstra(s,t,pi,w);
       // fill P
       std::set<Edge*> P;
       for(auto& i : dp)
@@ -458,7 +461,8 @@ void graphics::matching()
       for(Node* n : nodes)
         {
           pi[n] += dp[n].first;
-          n->setLabel(QString("%1").arg(pi[n]));
+          if(n->getBi() != Neither)
+            n->setLabel(QString("%1").arg(pi[n]));
         }
       // adjust w
       for(Edge* e : edges)
@@ -491,36 +495,41 @@ void graphics::matching()
 }
 //dijkstra
 // returns list of edges of the shortest path
-std::map<Node*,std::pair<int,Node*> > graphics::dijkstra(Node *source,Node *dest)
+std::map<Node*,std::pair<int,Node*> > graphics::dijkstra(Node *source,Node *dest,
+                                                         std::map<Node*,int>& pi,
+                                                         std::map<Edge*,int>& w)
 {
   // dist-prev structure holds result
   std::map<Node*,std::pair<int,Node*> > dp;
-  std::deque<std::pair<Node*,int> > Q;
+  std::deque<Node*> Q;
   //init
   for (Node* n : nodes)
     {
       dp[n].first = INT32_MAX; //ez a vegtelen most
       dp[n].second = NULL;
-      Q.push_back({n,dp[n].first});
+      Q.push_back(n);
     }
   dp[source].first = 0;
 
   while(!Q.empty())
     {
       //get minimal
-      auto pu = std::min_element(Q.begin(),Q.end(),
-                  [](std::pair<Node*,int> a,std::pair<Node*,int> b){
-                      return a.second < b.second;});
-      Node *u = pu->first;
+      Node *u = Q[0];
+      for (Node *n : Q)
+        {
+          if(dp[n].first < dp[u].first)
+            u = n;
+        }
       //terminate search if we reached dest
       if(u == dest)
         break;
 
-      Q.erase(pu);
+      Q.erase(std::remove_if(Q.begin(),Q.end(),
+                     [=](Node *n){return u == n;}));
 
       for (neighbor n : u->getNeighbors())
         {
-          int alt = dp[u].first + n.second->getWeight();
+          int alt = dp[u].first + w[n.second];
           if (alt < dp[n.first].first)
             {
               dp[n.first].first = alt;
@@ -570,6 +579,8 @@ void graphics::drawST(Node *&s,Node *&t)
   tpos.setY((ttop - tbot) / 2);
   s = new Node(spos,nodeId++,Neither);
   t = new Node(tpos,nodeId++,Neither);
+  s->setLabel("s");
+  t->setLabel("t");
   nodes.push_back(s);
   nodes.push_back(t);
   addItem(s);

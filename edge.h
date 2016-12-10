@@ -33,7 +33,7 @@ public:
   void setFrom(Node* node){start = node->pos();from = node;}
   void setLabel(QString l){label = l;}
   void setWeight(int nw){weight = nw;}
-  void setDirected(bool b){directed = b;}
+  void setDirected(bool b){directed = b;update();}
   void setInM(bool b){inM = b;}
   //remove
   void removeFromNeighbors();
