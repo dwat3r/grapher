@@ -1,11 +1,12 @@
 #include "graphics.h"
 #include <QDebug>
-#include <set>
-#include <cmath>
 #include <QTime>
 #include <QCoreApplication>
 #include <QEventLoop>
+#include <QtConcurrent/QtConcurrent>
 #include <ctime>
+#include <set>
+#include <cmath>
 
 //Node
 Node::Node(QPointF pos)
@@ -305,7 +306,7 @@ void Edge::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
   painter->drawLine(start,end);
   //painter->drawText(boundingRect(),Qt::AlignCenter,QString("%1").arg(id));
 }
-Edge::~Edge()
+void Edge::removeFromNeighbors()
 {
   from->removeNeighbor(to);
   to->removeNeighbor(from);
@@ -457,8 +458,8 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
                   node->addNeighbor({selectedEdge->getFrom(),selectedEdge});
                   selectedEdge->getFrom()->addNeighbor({node,selectedEdge});
                   update();
-                  graphModificationListener(selectedEdge->getFrom());
-                  graphModificationListener(selectedEdge->getTo());
+                  QtConcurrent::run(this,&graphics::graphModificationListener,selectedEdge->getFrom());
+                  QtConcurrent::run(this,&graphics::graphModificationListener,selectedEdge->getTo());
                   selectedEdge = NULL;
                 }
               break;
@@ -652,7 +653,7 @@ void graphics::removeEdge(Edge *edge)
         {
           removeItem(*i);
           edges.erase(i);
-          edge->~Edge();
+          edge->removeFromNeighbors();
           return;
         }
     }

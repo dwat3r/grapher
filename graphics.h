@@ -73,7 +73,7 @@ public:
   Edge(Node* from,int id);
   Edge(int id,QString label,QPointF start,QPointF end);
   // destructor calls notify
-  ~Edge();
+  void removeFromNeighbors();
   QRectF boundingRect() const;
   bool contains(const QPointF &pos) const;
   void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
