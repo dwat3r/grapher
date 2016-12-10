@@ -16,7 +16,8 @@ SOURCES += main.cpp\
         node.cpp \
         edge.cpp \
         graphics.cpp \
-    graphicsview.cpp
+    graphicsview.cpp \
+    matching.cpp
 
 
 HEADERS  += mainwindow.h \
