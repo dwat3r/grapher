@@ -467,8 +467,9 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
       if(selectedEdge != NULL)
         {
           removeItem(selectedEdge);
-          selectedEdge = NULL;
           edges.pop_back();
+          delete selectedEdge;
+          selectedEdge = NULL;
         }
     }
 }
