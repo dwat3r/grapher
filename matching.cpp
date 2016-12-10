@@ -100,9 +100,17 @@ void graphics::matching()
           // insert or delete edge on shortest path
           // according to M
           if(e->isInM())
-            e->setInM(false);
-          else
-            e->setInM(true);
+            {
+              e->setInM(false);
+              e->getFrom()->setInM(false);
+              e->getTo()->setInM(false);
+            }
+              else
+            {
+              e->setInM(true);
+              e->getFrom()->setInM(true);
+              e->getTo()->setInM(true);
+            }
         }
       // adjust pi
       for(Node* n : nodes)
@@ -120,10 +128,14 @@ void graphics::matching()
       //cleanup
       for (neighbor n : s->getNeighbors())
           removeEdge(n.second);
-      for (neighbor n : t->getNeighbors())
-          removeEdge(n.second);
-
-      // if all nodes are in M, break;
+      for (auto e = edges.begin();e!=edges.end();)
+      {
+        if((*e)->getTo() == t)
+            removeEdgeIt(e);
+        else
+          ++e;
+      }
+           // if all nodes are in M, break;
       bool cond = true;
       for (Node *node : nodes)
         {
@@ -195,35 +207,55 @@ void graphics::drawST(Node *&s,Node *&t)
   QPointF spos,tpos;
   qreal stop = 0,sbot = 0;
   qreal ttop = 0,tbot = 0;
-  for (Node* node : nodes)
+  if (nodes.size() > 2)
     {
-      if (node->getBi() == V1)
+      for (Node* node : nodes)
         {
-          if (node->x() < spos.x())
-            spos.setX(node->x());
-          if (node->y() > stop)
-            stop = node->y();
-          else if (node->y() < sbot)
-            sbot = node->y();
+          if (node->getBi() == V1)
+            {
+              if (node->x() < spos.x())
+                spos.setX(node->x());
+              if (node->y() > stop)
+                stop = node->y();
+              else if (node->y() < sbot)
+                sbot = node->y();
+            }
+          else if (node->getBi() == V2)
+            {
+              if (node->x() > tpos.x())
+                tpos.setX(node->x());
+              if (node->y() > ttop)
+                ttop = node->y();
+              else if (node->y() < tbot)
+                tbot = node->y();
+            }
         }
-      else if (node->getBi() == V2)
+      // doing pitagoras
+      spos.setX(spos.x() - std::sqrt(std::pow(stop - sbot,2) -
+                                     std::pow((stop - sbot) / 2,2)));
+      spos.setY((stop - sbot) / 2);
+
+      tpos.setX(tpos.x() + std::sqrt(std::pow(ttop - tbot,2) -
+                                     std::pow((ttop - tbot) / 2,2)));
+      tpos.setY((ttop - tbot) / 2);
+    }
+  else
+    //case for only 1 pair
+    {
+      for (Node* node : nodes)
         {
-          if (node->x() > tpos.x())
-            tpos.setX(node->x());
-          if (node->y() > ttop)
-            ttop = node->y();
-          else if (node->y() < tbot)
-            tbot = node->y();
+          if (node->getBi() == V1)
+            {
+              spos = node->pos();
+              spos.setX(spos.x() - 50);
+            }
+          else if (node->getBi() == V2)
+            {
+              tpos = node->pos();
+              tpos.setX(tpos.x() + 50);
+            }
         }
     }
-  // doing pitagoras
-  spos.setX(spos.x() - std::sqrt(std::pow(stop - sbot,2) -
-                                 std::pow((stop - sbot) / 2,2)));
-  spos.setY((stop - sbot) / 2);
-
-  tpos.setX(tpos.x() + std::sqrt(std::pow(ttop - tbot,2) -
-                                 std::pow((ttop - tbot) / 2,2)));
-  tpos.setY((ttop - tbot) / 2);
   s = new Node(spos,nodeId++,Neither);
   t = new Node(tpos,nodeId++,Neither);
   s->setLabel("s");

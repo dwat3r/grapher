@@ -208,14 +208,19 @@ void graphics::removeEdge(Edge *edge)
     {
       if((*i)->getId() == edge->getId())
         {
-          removeItem(*i);
-          edges.erase(i);
-          edge->removeFromNeighbors();
-          delete edge;
+          removeEdgeIt(i);
           return;
         }
     }
 }
+void graphics::removeEdgeIt(std::vector<Edge*>::iterator it)
+{
+  removeItem(*it);
+  edges.erase(it);
+  (*it)->removeFromNeighbors();
+  delete (*it);
+}
+
 void graphics::cleanup()
 {
   clear();

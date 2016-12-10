@@ -37,6 +37,7 @@ public:
   //deletions
   void removeNode(Node *node);
   void removeEdge(Edge *edge);
+  void removeEdgeIt(std::vector<Edge*>::iterator it);
 public slots:
   void setNodeDrawMode(){drawmode = NodeDraw;}
   void setEdgeDrawMode(){drawmode = EdgeDraw;}
