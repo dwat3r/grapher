@@ -89,8 +89,6 @@ public:
   void setStart(QPointF pos){start = pos;}
   void setTo(Node* node){end = node->pos();to = node;}
   void setFrom(Node* node){start = node->pos();from = node;}
-  //notify nodes if changed
-  void notifyChanged();
 private:
   QString label;
   Node* from;

@@ -2,7 +2,7 @@
 
 ## Bevezetés + fogalmak
 
-MIS megkeresése (igazából nem is megkeresi csak fenntartja?) gráfban elosztott rendszer esetén. <br />
+MIS tulajdonság fenntartása irányítatlan gráfban elosztott rendszer esetén. <br />
 
 Független halmaz (IS):
   - Csúcsok olyan halmaza, ahol egyik él között sincs él, azaz szomszédos csúcsok nem szerepelnek benne
@@ -32,27 +32,29 @@ Ebben a tanulmányban...
   - Csúcs *invariáns tulajdonság*: az állapota csakis a nála kisebb sorszámú szomszédoktól függ
   - Ha változás történik a gráfban akkor a csúcsoknak lehet, hogy egynél többször kell állapotot váltania
 
-### 1. állítás: Tetszőleges változtatás a gráfban - bármilyen véletlenszerű sorrend esetén - legfeljebb egy csúcs kimenetének megváltozását okozza
-
 ## Eloszott implementáció
 
 G = (V, E) irányítatlan gráfban E(|S|) <= 1, azaz legfeljebb egyetlen változtatás elég a MIS megtartásához dinamikus környezetben. Továbbá várhatóan egyetlen kör elég lesz ehhez. <br />
 Szinkron és aszinkron esetben is igaz lesz. <br />
 
+Broadcastok száma = Minden node O(log(n)) bit broadcastja egynek számít. <br />
 A csúcsoknak lokálisan csak a nála kisebb sorszámú csúcsok állapotairól kell tudnia. <br />
-Konstans számú kör elég lesz a MIS helyreállításához (de mindig azt írják, hogy *várhatóan* 1 kör).<br />
-Szinkron kommunikáció a csúcsok között körökre osztva (1 kör = 1 broadcast üzenet a szomszédoknak). Az üzenet mérete limitált, maximum O(log(n)) bit lehet, ahol n = |V|. <br />
+Konstans számú kör elég lesz a MIS helyreállításához (*várhatóan* 1 kör).<br />
+Szinkron kommunikáció a csúcsok között körökre osztva (1 kör = 1 broadcast üzenet a szomszédoknak). Az üzenet mérete limitált max. O(log(n)) bitre, ahol n = |V|. <br />
 
 A csúcsok outputja megadja a struktúrát (egy csúcs tudja magáról, hogy benne van-e a MIS-ben). <br />
 
+Várhatóan O(1) *broadcast* és bit átvitel elég egy változásnál. <br />
 Lehetséges változások a gráfban:
   - Tfh. egyszerre egy változás megy végbe a gráfban megfelelő időt hagyva a helyreállításra, azaz mindig megvan a MIS a kiinduló állapotban (stabil rendszer)
-  - csúcs/él törlés:
-    - graceful: az üzenetküldések után - amikor már stabil a rendszer - kilép a gráfból (addig használható kommunikációra)
-    - hirtelen (*abruptly*): a szomszédai automatikusan detektálják
-  - csúcs/él beszúrás:
-    - új: új csúcs lehetségesen több új éllel belép (ezt majd okosan kihagyjuk és csak akkor fogjuk unmuteolni, ha már van éle)
+  - csúcs beszúrás:
+    - új: új csúcs lehetségesen több új éllel belép, O(d(v\*)) broadcast várhatóan
     - *unmute*: addig láthatatlan csúcs csatlakozik, aki addig csak hallgatta a kommunikációt
+  - csúcs törlés:
+    - graceful: az üzenetküldések után - amikor már stabil a rendszer - kilép a gráfból (addig használható kommunikációra), O(1) bit
+    - hirtelen (*abrupt*): a szomszédai automatikusan detektálják, O(min{log(n), d(v\*)}) broadcast
+  - él törlés: O(1) bit
+  - él beszúrás: O(1) bit
 
 Komplexitás-vizsgálat:
   - Változtatás komplexitás: csúcsok száma, aminek megváltozott az outputja
@@ -61,8 +63,9 @@ Komplexitás-vizsgálat:
 
 ## Template MIS megtartásához (absztrakt)
 
-Legyen G = (V, E) gráfban M csúcspontok halmaza úgy, hogy M bármely két csúcsa között nincs él és bármely csúcsnak, ami nincs M-ben van szomszédja M-ben (azaz M MIS?). <br />
+Legyen G = (V, E) gráfban M csúcspontok halmaza úgy, hogy M bármely két csúcsa között nincs él és bármely csúcsnak, ami nincs M-ben van szomszédja M-ben (azaz M MIS). <br />
 Tekintsük ezt úgy, hogy kezdetben egy üres gráfból indultunk el végig megtartva a MIS-t. <br />
+Graceful és hirtelen node kilépés nincs megkülönböztetve, mivel csak a kommunikáció számában térnek el. <br />
 
 - Adott π uniform véletlenszerű permutációja v∈V csúcsoknak
 - A csúcsoknak két állapota lehet: v∈M vagy v∈M̄
@@ -82,7 +85,7 @@ S<sub>i</sub> = {u | u ∈ M , és S<sub>i−1</sub> ∩ I<sub>π</sub>(u) ≠ �
 
 Ezek után S = ∪<sub>i</sub>S<sub>i</sub>. Vegyük észre, hogy egy u csúcs több ilyen S<sub>i</sub>-ben is lehet. Ekkor u állapotát csak w ∈ I</sub>π</sub>(u) állapotának módosítása után frissíthetjük. Legyen i<sub>u</sub> = max{i | u ∈ S<sub>i</sub> } az az i maximális index, ahol u∈S<sub>i</sub>. <br />
 
-**Állítás 1 (*Theorem 1*)**: Bármely két gráfra, amik csak egy élben vagy csúcsban különböznek:
+**Theorem 1**: Bármely két gráfra, amik csak egy élben vagy csúcsban különböznek:
 E<sub>π</sub> [|S|] ≤ 1. (ez már szerepelt korábban, többször is). <br />
 
 **Algorithm 1** -> A Template for Dynamic Correlation Clustering <br />
@@ -94,3 +97,29 @@ On topology change at node v\* do: <br />
 3.   For every u ∈ S<sub>i</sub> such that i = i<sub>u</sub>: <br />
 4.     Update state of u <br />
 5. i ← i + 1 <br />
+
+## Konstans broadcast implementáció
+
+Az *Algorithm 1*-nek dinamikusan elosztott környezetben sokkal nagyobb broadcast komplexitásra lehet szüksége és többször változtatnia kell az állapotát. Annak ellenére, hogy várhatóan konstans változás megy végbe, egészen |S|<sup>2</sup>-ig degradálódhat a broadcastek száma, tehát a várható broadcastek száma *n*-es is lehet (most akkor konstans, n-es vagy mi??). <br />
+Szinkron implementáció => a csúcsok kivárják a isebb szomszédaik állapotváltozásait és csak a végén váltanak. Ezért O(1) broadcast elég lesz, viszont 1 kör helyett O(1) körkomplexitást eredményez. <br />
+
+Minden csúcsnak van l<sub>v</sub>∈[0, 1] ID-ja és mindegyik szomszéd nyilvántartja mindegyik szomszédjának ID-ját. <br />
+
+Konkrét dinamikusan elosztott implementáció: <br />
+
+Csúcs lehetséges állapotai: M, M̄, C vagy R.
+
+**Algorithm 2** MIS Algorithm for node v <br />
+1: v ∈ M : If some u ∈ I<sub>π</sub>(v) changes to state C -> change state to C. <br />
+2: v ∈ M̄ : If some u ∈ I<sub>π</sub>(v) changes to state C and all other w ∈ I<sub>π</sub>(v) are not in M -> change state to C. <br />
+3: v ∈ C: If (1) all neighbors u with π(v) < π(u) are not in state C and (2) v changed to state C at least  2 rounds ago -> change state to R. <br />
+4: v ∈ R: If all u ∈ I<sub>π</sub>(v) are in states M̄ or M -> change state to M if all u ∈ I<sub>π</sub>(v) are in M̄ and change state to M̄ otherwise. <br />
+
+Minden állapotváltozást egy broadcast üzenet követ. Ha a MIS invariáns v csúcsnál tart, akkor nem csinál semmit, egyébként C-be vált. <br />
+M vagy M̄ állapotból akkor vált C-re, ha beleesik a befolyásolt csúcsok halmazába. <br />
+
+*Lemma 8*: Egy csúcs csak egyszer vált R-ből. <br />
+
+*Lemma 11*: Az algoritmus max. 3*|S|+2 kör alatt végez. <br />
+
++ Sok-sok példa progival bemutatva (Csillag topológia, stb.)
