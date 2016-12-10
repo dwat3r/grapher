@@ -37,6 +37,7 @@ Node::Node(qreal id,QString label,QPointF pos,status state,int inCStateRoundCoun
   setZValue(0);
   setRect(boundingRect());
   setVisible(true);
+  updateColors();
 }
 
 void Node::getNodeInfo() const
