@@ -88,7 +88,7 @@ void Edge::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
       _line.setP2(_line.p2() - edgeOffset);
 
       setLine(_line);
-      qreal arrowSize = 20;
+      qreal arrowSize = 10;
       double angle = ::acos(line().dx() / (line().length()));
       if (line().dy() >= 0)
           angle = (Pi * 2) - angle;

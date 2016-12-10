@@ -445,6 +445,8 @@ void graphics::matching()
             {
               if(i.first == e->getFrom() && i.second.second == e->getTo())
                 P.insert(e);
+              else if (i.first == e->getTo() && i.second.second == e->getFrom())
+                P.insert(e);
             }
         }
       // adjust M
