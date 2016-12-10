@@ -3,7 +3,6 @@
 #include <QTime>
 #include <QCoreApplication>
 #include <QEventLoop>
-#include <QtConcurrent/QtConcurrent>
 #include <ctime>
 #include <set>
 #include <cmath>
@@ -458,8 +457,8 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
                   node->addNeighbor({selectedEdge->getFrom(),selectedEdge});
                   selectedEdge->getFrom()->addNeighbor({node,selectedEdge});
                   update();
-                  QtConcurrent::run(this,&graphics::graphModificationListener,selectedEdge->getFrom());
-                  QtConcurrent::run(this,&graphics::graphModificationListener,selectedEdge->getTo());
+                  graphModificationListener(selectedEdge->getFrom());
+                  graphModificationListener(selectedEdge->getTo());
                   selectedEdge = NULL;
                 }
               break;
