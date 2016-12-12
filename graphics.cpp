@@ -202,6 +202,7 @@ void graphics::removeNode(Node *node)
         }
     }
 }
+
 void graphics::removeEdge(Edge *edge)
 {
   for(auto i = edges.begin();i!= edges.end();++i)
@@ -213,12 +214,14 @@ void graphics::removeEdge(Edge *edge)
         }
     }
 }
-void graphics::removeEdgeIt(std::vector<Edge*>::iterator it)
+
+std::vector<Edge*>::iterator graphics::removeEdgeIt(std::vector<Edge*>::iterator it)
 {
   removeItem(*it);
-  edges.erase(it);
   (*it)->removeFromNeighbors();
   delete (*it);
+  it = edges.erase(it);
+  return it;
 }
 
 void graphics::cleanup()

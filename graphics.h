@@ -31,13 +31,13 @@ public:
                                                  std::map<Node*,int>& pi,
                                                  std::map<Edge*,int>& w);
   void drawST(Node *&s,Node *&t);
-  void directEdges();
+  void directEdges(std::map<Edge*,int>& w);
   //reset scene
   void cleanup();
   //deletions
   void removeNode(Node *node);
   void removeEdge(Edge *edge);
-  void removeEdgeIt(std::vector<Edge*>::iterator it);
+  std::vector<Edge*>::iterator removeEdgeIt(std::vector<Edge*>::iterator it);
 public slots:
   void setNodeDrawMode(){drawmode = NodeDraw;}
   void setEdgeDrawMode(){drawmode = EdgeDraw;}

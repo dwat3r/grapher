@@ -8,14 +8,14 @@ MainWindow::MainWindow(QWidget *parent) :
   ui(new Ui::MainWindow)
 {
   ui->setupUi(this);
-  graphics *scene = ui->graphicsView->getScene();
+  scene = ui->graphicsView->getScene();
   // set mouse tracking in statusbar
   ui->graphicsView->viewport()->installEventFilter(this);
 
   // connect buttons to draw modes
   connect(ui->actionNode,&QAction::triggered,scene,&graphics::setNodeDrawMode);
   connect(ui->actionEdge,&QAction::triggered,scene,&graphics::setEdgeDrawMode);
-  connect(ui->actionPlay,&QAction::triggered,scene,&graphics::matching);
+  connect(ui->actionStart,&QAction::triggered,scene,&graphics::matching);
   // connect menu buttons
   connect(ui->actionLoad,&QAction::triggered,this,&MainWindow::load);
   connect(ui->actionSave,&QAction::triggered,this,&MainWindow::save);
@@ -25,7 +25,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-  delete scene;
   delete ui;
 }
 

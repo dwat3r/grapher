@@ -1,6 +1,7 @@
 #include "graphics.h"
 #include <QCoreApplication>
 #include <QEventLoop>
+#include <QTime>
 #include <deque>
 #include <set>
 #include <algorithm>
@@ -48,7 +49,7 @@ void graphics::matching()
   // init w
   for (Edge* e : edges)
     {
-      w[e] = pi[e->getFrom()] + e->getWeight() - pi[e->getTo()];
+      w[e] = e->getWeight();
       e->setLabel(QString("%1").arg(w[e]));
     }
   //main loop
@@ -61,6 +62,7 @@ void graphics::matching()
             {
               Edge* e = new Edge(edgeId++,0,s,node);
               w[e] = 0;
+              e->setLabel(QString("%1").arg(w[e]));
               s->addNeighbor({node,e});
               edges.push_back(e);
               addItem(e);
@@ -70,6 +72,7 @@ void graphics::matching()
             {
               Edge* e = new Edge(edgeId++,0,node,t);
               w[e] = 0;
+              e->setLabel(QString("%1").arg(w[e]));
               node->addNeighbor({t,e});
               edges.push_back(e);
               addItem(e);
@@ -78,36 +81,58 @@ void graphics::matching()
 
       // direct edges between V1 & V2 according to M
       // and reverse value if in M
-      directEdges();
+      directEdges(w);
 
       // perform Dijkstra between s & t
       std::map<Node*,std::pair<int,Node*> > dp = dijkstra(s,t,pi,w);
-      // fill P
-      std::set<Edge*> P;
-      for(auto& i : dp)
+      qDebug() << "s,t:" << s->getId() << t->getId();
+      for (auto p : dp)
         {
-          for(Edge* e : edges)
+          if(p.second.second != NULL)
+            qDebug() << p.first->getId() << p.second.second->getId();
+        }
+        // get shortest path edges to P
+      std::set<Edge*> P;
+      Node* u = t;
+      while (u != s)
+        {
+          for (Edge* e : edges)
             {
-              if(i.first == e->getFrom() && i.second.second == e->getTo())
-                P.insert(e);
-              else if (i.first == e->getTo() && i.second.second == e->getFrom())
-                P.insert(e);
+              if (e->getFrom() == dp[u].second && e->getTo() == u)
+                {
+                  P.insert(e);
+                  u = dp[u].second;
+                  break;
+                }
             }
         }
+
       // adjust M
+      qDebug() << "P:";
       for(Edge* e : P)
         {
           // insert or delete edge on shortest path
           // according to M
+          qDebug() << e->getFrom()->getId() << e->getTo()->getId();
           if(e->isInM())
             {
               e->setInM(false);
-              e->getFrom()->setInM(false);
-              e->getTo()->setInM(false);
             }
               else
             {
               e->setInM(true);
+            }
+        }
+      // adjust node states : in two pass
+      for (Edge* e : edges)
+        {
+          e->getFrom()->setInM(false);
+          e->getTo()->setInM(false);
+        }
+      for (Edge *e : edges)
+        {
+          if(e->isInM())
+            {
               e->getFrom()->setInM(true);
               e->getTo()->setInM(true);
             }
@@ -115,24 +140,35 @@ void graphics::matching()
       // adjust pi
       for(Node* n : nodes)
         {
+          qDebug() << "pi before:" << pi[n];
           pi[n] += dp[n].first;
+          qDebug() << "pi after :" << pi[n];
           if(n->getBi() != Neither)
             n->setLabel(QString("%1").arg(pi[n]));
+            n->update();
         }
       // adjust w
       for(Edge* e : edges)
-      {
-          w[e] += pi[e->getFrom()] - pi[e->getTo()];
+        {
+          qDebug() << "w before:" << w[e];
+          w[e] = pi[e->getFrom()] + w[e] -pi[e->getTo()];
+          qDebug() << "w after :" << w[e];
           e->setLabel(QString("%1").arg(w[e]));
-      }
+        }
       //cleanup
-      for (neighbor n : s->getNeighbors())
-          removeEdge(n.second);
       for (auto e = edges.begin();e!=edges.end();)
       {
-        if((*e)->getTo() == t)
-            removeEdgeIt(e);
-        else
+          if((*e)->getFrom() == s)
+          {
+            w.erase((*e));
+            e = removeEdgeIt(e);
+          }
+          else if((*e)->getTo() == t)
+          {
+            w.erase((*e));
+            e = removeEdgeIt(e);
+          }
+          else
           ++e;
       }
            // if all nodes are in M, break;
@@ -140,16 +176,18 @@ void graphics::matching()
       for (Node *node : nodes)
         {
           if(!node->isInM() && node->getBi() != Neither)
-            cond = false;
+            {
+              cond = false;
+              break;
+            }
         }
       if (cond)
         break;
-      else
-        {
-          QTime dieTime= QTime::currentTime().addMSecs(300);
-          while (QTime::currentTime() < dieTime)
-          QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-        }
+      //wait between steps
+      QTime dieTime = QTime::currentTime().addSecs(1);
+      while (QTime::currentTime() < dieTime)
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+
     }
 }
 //dijkstra
@@ -188,7 +226,7 @@ std::map<Node*,std::pair<int,Node*> > graphics::dijkstra(Node *source,Node *dest
 
       for (neighbor n : u->getNeighbors())
         {
-          int alt = dp[u].first + w[n.second];
+          int alt = dp[u].first + w[n.second] + pi[n.first];
           if (alt < dp[n.first].first)
             {
               dp[n.first].first = alt;
@@ -197,6 +235,43 @@ std::map<Node*,std::pair<int,Node*> > graphics::dijkstra(Node *source,Node *dest
         }
     }
   return dp;
+}
+// direct edges between V1 & V2 according to M
+// and reverse value if in M
+void graphics::directEdges(std::map<Edge*,int>& w)
+{
+  for(Edge* e : edges)
+    {
+      // set neighborship
+      if (e->isInM() &&
+          e->getFrom()->getBi() == V1 &&
+          e->getTo()->getBi() == V2)
+        {
+          qDebug() << "Reversing in M:" << e->getFrom()->getId() << e->getTo()->getId();
+          // swap!
+          Node* n = e->getFrom();
+          e->setFrom(e->getTo());
+          e->setTo(n);
+          e->getFrom()->addNeighbor({e->getTo(),e});
+          // reverse value
+          w[e] = -w[e];
+        }
+      else if (!e->isInM() &&
+               e->getFrom()->getBi() == V2 &&
+               e->getTo()->getBi() == V1)
+        {
+          qDebug() << "Reversing not in M:" << e->getFrom()->getId() << e->getTo()->getId();
+          //swap!
+          Node* n = e->getFrom();
+          e->setFrom(e->getTo());
+          e->setTo(n);
+          e->getFrom()->addNeighbor({e->getTo(),e});
+        }
+      if (!(e->getFrom()->getBi() == Neither) &&
+          !(e->getTo()->getBi() == Neither))
+        e->getTo()->removeNeighbor(e->getFrom());
+      e->update();
+    }
 }
 // draws s and t nodes, based on the position of the existing ones
 void graphics::drawST(Node *&s,Node *&t)
@@ -264,32 +339,4 @@ void graphics::drawST(Node *&s,Node *&t)
   nodes.push_back(t);
   addItem(s);
   addItem(t);
-}
-// direct edges between V1 & V2 according to M
-// and reverse value if in M
-void graphics::directEdges()
-{
-  for(Edge* e : edges)
-    {
-      // set neighborship
-      if (e->getFrom()->isInM() && e->getTo()->isInM() &&
-          e->getFrom()->getBi() == V1)
-        {
-          // swap!
-          Node* n = e->getFrom();
-          e->setFrom(e->getTo());
-          e->setTo(n);
-        }
-      else if (e->getFrom()->getBi() == V2)
-        {
-          //swap!
-          Node* n = e->getFrom();
-          e->setFrom(e->getTo());
-          e->setTo(n);
-        }
-      if (!(e->getFrom()->getBi() == Neither) &&
-          !(e->getTo()->getBi() == Neither))
-        e->getTo()->removeNeighbor(e->getFrom());
-    }
-  update();
 }

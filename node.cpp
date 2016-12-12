@@ -8,10 +8,10 @@ Node::Node(QPointF pos,int id,bipartition bi)
   , id(id)
   , adlist()
   , bi(bi)
-  , inM()
+  , inM(false)
 {
   setPos(pos);
-  label = QString::number(id);
+  label = QString::number(0);
   setFlag(ItemSendsGeometryChanges);
   setCacheMode(DeviceCoordinateCache);
   setZValue(0);

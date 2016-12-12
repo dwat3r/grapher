@@ -12,6 +12,7 @@ Edge::Edge(Node* from,int id)
   , id(id)
   , weight(1)
   , directed(0)
+  , inM(false)
 {
   init();
 }
@@ -24,6 +25,7 @@ Edge::Edge(int id,int weight,QString label,QPointF start,QPointF end)
   ,id(id)
   ,weight(weight)
   ,directed(0)
+  ,inM(false)
 {
   init();
 }
