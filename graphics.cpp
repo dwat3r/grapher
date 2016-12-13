@@ -8,8 +8,8 @@ graphics::graphics()
   : QGraphicsScene()
   , nodes()
   , edges()
-  , selectedEdge(NULL)
-  , selectedNode(NULL)
+  , selectedEdge(nullptr)
+  , selectedNode(nullptr)
   , drawmode(NodeDraw)
   , nodeId(0)
   , edgeId(0)
@@ -87,7 +87,7 @@ void graphics::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void graphics::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-  if(drawmode == NodeDraw && selectedNode != NULL)
+  if(drawmode == NodeDraw && selectedNode != nullptr)
     {
       // node movement
       selectedNode->setPos(event->scenePos());
@@ -101,7 +101,7 @@ void graphics::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         }
       update();
     }
-  else if (selectedEdge != NULL)
+  else if (selectedEdge != nullptr)
     {
       // edge draw
       selectedEdge->setEnd(event->scenePos());
@@ -111,12 +111,12 @@ void graphics::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-  if(drawmode == NodeDraw && selectedNode != NULL)
+  if(drawmode == NodeDraw && selectedNode != nullptr)
     {
       // stop moving node
-      selectedNode = NULL;
+      selectedNode = nullptr;
     }
-  else if (selectedEdge != NULL)
+  else if (selectedEdge != nullptr)
     {
       // end of edge draw
       for(Node* node : nodes)
@@ -155,16 +155,16 @@ void graphics::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
                   node->addNeighbor({selectedEdge->getFrom(),selectedEdge});
                   selectedEdge->getFrom()->addNeighbor({node,selectedEdge});
                   update();
-                  selectedEdge = NULL;
+                  selectedEdge = nullptr;
                 }
               break;
             }
         }
-      if(selectedEdge != NULL)
+      if(selectedEdge != nullptr)
         {
           removeItem(selectedEdge);
           delete selectedEdge;
-          selectedEdge = NULL;
+          selectedEdge = nullptr;
         }
     }
 }

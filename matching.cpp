@@ -19,8 +19,8 @@ void graphics::matching()
   for (Edge* e : edges)
     e->setDirected(true);
   // create s and t
-  Node *s = NULL;
-  Node *t = NULL;
+  Node *s = nullptr;
+  Node *t = nullptr;
   drawST(s,t);
   // create empty M
   // M included in edge
@@ -88,7 +88,7 @@ void graphics::matching()
       qDebug() << "s,t:" << s->getId() << t->getId();
       for (auto p : dp)
         {
-          if(p.second.second != NULL)
+          if(p.second.second != nullptr)
             qDebug() << p.first->getId() << p.second.second->getId();
         }
         // get shortest path edges to P
@@ -201,7 +201,7 @@ std::map<Node*,std::pair<int,Node*> > graphics::dijkstra(Node *source,Node *dest
   for (Node* n : nodes)
     {
       dp[n].first = INT32_MAX; //ez a vegtelen most
-      dp[n].second = NULL;
+      dp[n].second = nullptr;
       Q.push_back(n);
     }
   dp[source].first = 0;
