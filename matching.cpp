@@ -9,6 +9,7 @@
 //matching algorithm
 void graphics::matching()
 {
+  qDebug() << "Starting matching";
   //reverse edge weights
   Edge* pewmax = *std::max_element(edges.begin(),edges.end(),
                 [](Edge* a,Edge* b){return a->getWeight() < b->getWeight();});
@@ -142,7 +143,7 @@ void graphics::matching()
         {
           if(dp[n].first < INT_MAX)
             pi[n] += dp[n].first;
-          qDebug() << "pi :" << pi[n];
+          qDebug() << n->getId() << " pi :" << pi[n];
           if(n->getBi() != Neither)
             n->setLabel(QString("%1").arg(pi[n]));
             n->update();
@@ -151,8 +152,9 @@ void graphics::matching()
       for(Edge* e : edges)
         {
           w[e] = pi[e->getFrom()] + w[e] -pi[e->getTo()];
-          qDebug() << "w :" << w[e];
+          qDebug() << e->getId() << " w :" << w[e];
           e->setLabel(QString("%1").arg(w[e]));
+          e->update();
         }
       //wait between steps
       QTime dieTime = QTime::currentTime().addSecs(1);
