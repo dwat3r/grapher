@@ -241,10 +241,10 @@ QTextStream& operator << (QTextStream &data,graphics &g)
   /*data looks like this:
   nodesize edgesize
   (first nodes):
-  id label bi x y [neighborNodeId neigborEdgeId]*
+  id label bi isinm x y [neighborNodeId neigborEdgeId]*
   ###
   (then edges):
-  id label startx starty endx endy fromId toId
+  id weight label isinm startx starty endx endy fromId toId
   */
   data << g.nodes.size() << g.edges.size() << '\n';
 
@@ -342,19 +342,19 @@ QTextStream& operator >> (QTextStream &data,graphics &g)
     {
       int id,n;QString s;
       // skip unneeded first run
-      data >> id >> s >> n >> n;
+      data >> id >> s >> n >> n >> n >> n;
       QStringList sl = data.readLine().split(" ",QString::SkipEmptyParts);
       for(int i =0;i < sl.length(); i += 2)
         {
           nodepmap[id]->addNeighbor({nodepmap[sl[i].toInt()],edgepmap[sl[i+1].toInt()]});
         }
     }
-  data.readLine();
+  data.readLine(); // ###
   for(size_t i = edgesize;i > 0; --i)
     {
       int id,n;QString s;
       //skip unneeded
-      data >> id >> s >> n >> n >> n >> n;
+      data >> id >> s >> n >> n >> n >> n >> n;
       int fid,tid;
       data >> fid >> tid;
       edgepmap[id]->setFrom(nodepmap[fid]);

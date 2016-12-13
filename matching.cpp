@@ -140,9 +140,9 @@ void graphics::matching()
       // adjust pi
       for(Node* n : nodes)
         {
-          qDebug() << "pi before:" << pi[n];
-          pi[n] += dp[n].first;
-          qDebug() << "pi after :" << pi[n];
+          if(dp[n].first < INT_MAX)
+            pi[n] += dp[n].first;
+          qDebug() << "pi :" << pi[n];
           if(n->getBi() != Neither)
             n->setLabel(QString("%1").arg(pi[n]));
             n->update();
@@ -150,11 +150,14 @@ void graphics::matching()
       // adjust w
       for(Edge* e : edges)
         {
-          qDebug() << "w before:" << w[e];
           w[e] = pi[e->getFrom()] + w[e] -pi[e->getTo()];
-          qDebug() << "w after :" << w[e];
+          qDebug() << "w :" << w[e];
           e->setLabel(QString("%1").arg(w[e]));
         }
+      //wait between steps
+      QTime dieTime = QTime::currentTime().addSecs(1);
+      while (QTime::currentTime() < dieTime)
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
       //cleanup
       for (auto e = edges.begin();e!=edges.end();)
       {
@@ -183,11 +186,6 @@ void graphics::matching()
         }
       if (cond)
         break;
-      //wait between steps
-      QTime dieTime = QTime::currentTime().addSecs(1);
-      while (QTime::currentTime() < dieTime)
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-
     }
 }
 //dijkstra

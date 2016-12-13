@@ -34,7 +34,7 @@ public:
   //debug
   void getNodeInfo() const;
   //setters
-  void setLabel(QString label) {label = label;}
+  void setLabel(QString labell) {label = labell;}
   void setInM(bool b) {inM = b;}
   // removes neighbor
   void removeNeighbor(Node *node);
