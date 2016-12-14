@@ -5,6 +5,12 @@
 #include <deque>
 #include <set>
 #include <algorithm>
+void waitSecond(int seconds)
+{
+  QTime dieTime = QTime::currentTime().addSecs(seconds);
+  while (QTime::currentTime() < dieTime)
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+}
 
 //matching algorithm
 void graphics::matching()
@@ -36,14 +42,19 @@ void graphics::matching()
         {
           pi[node] = INT32_MAX; //positive infinity
           for (neighbor n : node->getNeighbors())
-            if (n.second->getWeight() < pi[node])
-              pi[node] = n.second->getWeight();
+            {
+              if (n.second->getWeight() < pi[node])
+                pi[node] = n.second->getWeight();
+            }
         }
       else
         //for s and t
         pi[node] = 0;
-      node->setLabel(QString("%1").arg(pi[node]));
-      node->update();
+      if (node->getBi() != Neither)
+        {
+          node->setLabel(QString("%1").arg(pi[node]));
+          node->update();
+        }
     }
   // create w for edges
   std::map<Edge*,int> w;
@@ -85,12 +96,12 @@ void graphics::matching()
       directEdges(w);
 
       // perform Dijkstra between s & t
-      std::map<Node*,std::pair<int,Node*> > dp = dijkstra(s,t,pi,w);
+      std::map<Node*,std::pair<int,Node*> > dp = dijkstra(s,pi,w);
       qDebug() << "s,t:" << s->getId() << t->getId();
       for (auto p : dp)
         {
           if(p.second.second != nullptr)
-            qDebug() << p.first->getId() << p.second.second->getId();
+            qDebug() << p.first->getId() << p.second.second->getId() << p.second.first;
         }
         // get shortest path edges to P
       std::set<Edge*> P;
@@ -157,9 +168,7 @@ void graphics::matching()
           e->update();
         }
       //wait between steps
-      QTime dieTime = QTime::currentTime().addSecs(1);
-      while (QTime::currentTime() < dieTime)
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+      waitSecond(2);
       //cleanup
       for (auto e = edges.begin();e!=edges.end();)
       {
@@ -192,13 +201,14 @@ void graphics::matching()
 }
 //dijkstra
 // returns list of edges of the shortest path
-std::map<Node*,std::pair<int,Node*> > graphics::dijkstra(Node *source,Node *dest,
+std::map<Node*,std::pair<int,Node*> > graphics::dijkstra(Node *source,
                                                          std::map<Node*,int>& pi,
                                                          std::map<Edge*,int>& w)
 {
   // dist-prev structure holds result
   std::map<Node*,std::pair<int,Node*> > dp;
   std::deque<Node*> Q;
+  std::set<Node*> visited;
   //init
   for (Node* n : nodes)
     {
@@ -217,20 +227,20 @@ std::map<Node*,std::pair<int,Node*> > graphics::dijkstra(Node *source,Node *dest
           if(dp[n].first < dp[u].first)
             u = n;
         }
-      //terminate search if we reached dest
-      if(u == dest)
-        break;
-
+      visited.insert(u);
       Q.erase(std::remove_if(Q.begin(),Q.end(),
                      [=](Node *n){return u == n;}));
 
       for (neighbor n : u->getNeighbors())
         {
-          int alt = dp[u].first + w[n.second] + pi[n.first];
-          if (alt < dp[n.first].first)
+          if(!(visited.find(n.first) != visited.end()))
             {
-              dp[n.first].first = alt;
-              dp[n.first].second = u;
+              int alt = dp[u].first + w[n.second] + pi[n.first];
+              if (alt < dp[n.first].first)
+                {
+                  dp[n.first].first = alt;
+                  dp[n.first].second = u;
+                }
             }
         }
     }
@@ -306,8 +316,8 @@ void graphics::drawST(Node *&s,Node *&t)
             }
         }
       // doing pitagoras
-      spos.setX(spos.x() - std::sqrt(std::pow(stop - sbot,2) -
-                                     std::pow((stop - sbot) / 2,2)));
+      spos.setX(spos.x() - std::sqrt(std::pow((stop - sbot) / 2 ,2) -
+                                     std::pow((stop - sbot) / 2 ,2)));
       spos.setY((stop - sbot) / 2);
 
       tpos.setX(tpos.x() + std::sqrt(std::pow(ttop - tbot,2) -
