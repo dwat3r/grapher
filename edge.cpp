@@ -13,19 +13,21 @@ Edge::Edge(Node* from,int id)
   , weight(1)
   , directed(0)
   , inM(false)
+  , inP(false)
 {
   init();
 }
 Edge::Edge(int id,int weight,QString label,QPointF start,QPointF end)
   : label(label)
-  ,from(nullptr)
-  ,to(nullptr)
-  ,start(start)
-  ,end(end)
-  ,id(id)
-  ,weight(weight)
-  ,directed(0)
-  ,inM(false)
+  , from(nullptr)
+  , to(nullptr)
+  , start(start)
+  , end(end)
+  , id(id)
+  , weight(weight)
+  , directed(0)
+  , inM(false)
+  , inP(false)
 {
   init();
 }
@@ -42,6 +44,7 @@ Edge::Edge(int id,int weight,Node* from,Node* to)
 }
 void Edge::init()
 {
+  setLabel(QString::number(weight));
   setFlag(ItemSendsGeometryChanges);
   setCacheMode(DeviceCoordinateCache);
   setZValue(-1);
@@ -74,11 +77,15 @@ bool Edge::contains(const QPointF &pos) const
 
 void Edge::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
 {
-  if (inM)
-    painter->setPen(Qt::red);
+  if (inP)
+    painter->setPen(Qt::blue);
   else
-    painter->setPen(Qt::black);
-
+    {
+    if (inM)
+      painter->setPen(Qt::red);
+    else
+      painter->setPen(Qt::black);
+  }
   painter->drawLine(start,end);
   if (directed)
     {
@@ -103,7 +110,7 @@ void Edge::paint(QPainter *painter,const QStyleOptionGraphicsItem *,QWidget *)
       arrowHead << line().p1() << arrowP1 << arrowP2;
       painter->drawPolygon(arrowHead);
     }
-  painter->drawText(boundingRect(),Qt::AlignCenter,QString("%1").arg(weight));
+  painter->drawText(boundingRect(),Qt::AlignCenter,QString("%1").arg(label));
 }
 void Edge::removeFromNeighbors()
 {

@@ -26,6 +26,7 @@ public:
   int getWeight() const {return weight;}
   bool isDirected() const {return directed;}
   bool isInM() const {return inM;}
+  bool isInP() const {return inP;}
   //setters
   void setEnd(QPointF pos){end = pos;}
   void setStart(QPointF pos){start = pos;}
@@ -35,6 +36,7 @@ public:
   void setWeight(int nw){weight = nw;}
   void setDirected(bool b){directed = b;update();}
   void setInM(bool b){inM = b;}
+  void setInP(bool b){inP = b;}
   //remove
   void removeFromNeighbors();
 private:
@@ -52,5 +54,6 @@ private:
   bool directed;
   //inM
   bool inM;
+  bool inP;
 };
 #endif // EDGE_H

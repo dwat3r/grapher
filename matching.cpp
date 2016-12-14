@@ -5,9 +5,9 @@
 #include <deque>
 #include <set>
 #include <algorithm>
-void waitSecond(int seconds)
+void waitMSeconds(int mseconds)
 {
-  QTime dieTime = QTime::currentTime().addSecs(seconds);
+  QTime dieTime = QTime::currentTime().addMSecs(mseconds);
   while (QTime::currentTime() < dieTime)
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
@@ -113,16 +113,25 @@ void graphics::matching()
               if (e->getFrom() == dp[u].second && e->getTo() == u)
                 {
                   P.insert(e);
+                  e->setInP(true);
+                  e->update();
+                  waitMSeconds(500);
                   u = dp[u].second;
                   break;
                 }
             }
         }
-
+      waitMSeconds(1000);
+      for (Edge* e : P)
+        {
+          e->setInP(false);
+          e->update();
+        }
       // adjust M
       qDebug() << "P:";
       for(Edge* e : P)
         {
+
           // insert or delete edge on shortest path
           // according to M
           qDebug() << e->getFrom()->getId() << e->getTo()->getId();
@@ -168,7 +177,7 @@ void graphics::matching()
           e->update();
         }
       //wait between steps
-      waitSecond(2);
+      waitMSeconds(2000);
       //cleanup
       for (auto e = edges.begin();e!=edges.end();)
       {
@@ -289,7 +298,8 @@ void graphics::drawST(Node *&s,Node *&t)
 
   // assume we're drawing bipartites the traditional way
   // create nodes beside the graph
-  QPointF spos,tpos;
+  QPointF spos(INT_MAX,0);
+  QPointF tpos(INT_MIN,0);
   qreal stop = 0,sbot = 0;
   qreal ttop = 0,tbot = 0;
   if (nodes.size() > 2)
@@ -316,7 +326,7 @@ void graphics::drawST(Node *&s,Node *&t)
             }
         }
       // doing pitagoras
-      spos.setX(spos.x() - std::sqrt(std::pow((stop - sbot) / 2 ,2) -
+      spos.setX(spos.x() - std::sqrt(std::pow((stop - sbot) ,2) -
                                      std::pow((stop - sbot) / 2 ,2)));
       spos.setY((stop - sbot) / 2);
 
