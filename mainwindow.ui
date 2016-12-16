@@ -160,8 +160,6 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionStart"/>
-   <addaction name="actionStep"/>
-   <addaction name="actionReset"/>
   </widget>
   <action name="actionLoad">
    <property name="text">
